@@ -69,5 +69,10 @@ an on-page side panel, only when the user invokes it via the context menu.
 - [x] Small promo tile 440x280 (store-assets/promo-small-440x280.png)
 - [x] Marquee promo tile 1400x560 (store-assets/promo-marquee-1400x560.png)
 - [x] Feature/hero graphic 1280x800 (store-assets/feature-1280x800.png)
-- [x] Screenshot 1280x800 (store-assets/screenshot-1-1280x800.png)
-- [ ] Optional: capture live screenshots from the loaded extension for extra authenticity
+- [x] Screenshots 1280x800 — real captures of the running UI:
+      - screenshot-live-1-translate-1280x800.png (translate + grammar over an article)
+      - screenshot-live-2-grammar-1280x800.png (grammar explanation)
+      - screenshot-live-3-compact-1280x800.png (compact mode, all 4 languages)
+      - screenshot-live-4-dark-1280x800.png (dark mode)
+      - screenshot-live-5-settings-1280x800.png (settings page)
+- [x] Composed screenshot mockup (store-assets/screenshot-1-1280x800.png) — optional backup
