@@ -47,15 +47,20 @@ class PanelController {
     mode: 'expanded' as 'compact' | 'expanded',
     theme: 'light' as 'light' | 'dark',
     widthPct: 25,
+    widthPx: 380,
     cards: [] as Card[],
     history: [] as LookupResult[],
     historyOpen: true,
+    resizing: false,
   }
 
   private async ensureMounted() {
     this.settings = await getSettings()
     this.state.theme = this.settings.darkMode ? 'dark' : 'light'
     this.state.widthPct = this.settings.panelWidthPct
+    this.state.widthPx = this.clampWidth(
+      Math.round((window.innerWidth * this.settings.panelWidthPct) / 100)
+    )
     this.state.mode = this.settings.panelMode
     this.state.history = await getHistory()
 
@@ -75,12 +80,58 @@ class PanelController {
     this.root = createRoot(mount)
   }
 
+  private clampWidth(px: number): number {
+    const max = Math.min(760, Math.round(window.innerWidth * 0.8))
+    return Math.max(320, Math.min(max, px))
+  }
+
+  private startResize = (e: React.PointerEvent) => {
+    e.preventDefault()
+    this.state.resizing = true
+    if (this.host) {
+      const root = this.host.shadowRoot?.querySelector('.grh-root') as HTMLElement | null
+      root?.classList.add('grh-resizing')
+    }
+    const prevUserSelect = document.body.style.userSelect
+    document.body.style.userSelect = 'none'
+    document.body.style.cursor = 'ew-resize'
+
+    const onMove = (ev: PointerEvent) => {
+      this.state.widthPx = this.clampWidth(window.innerWidth - ev.clientX)
+      this.render()
+    }
+    const onUp = () => {
+      this.state.resizing = false
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+      document.body.style.userSelect = prevUserSelect
+      document.body.style.cursor = ''
+      if (this.host) {
+        const root = this.host.shadowRoot?.querySelector('.grh-root') as HTMLElement | null
+        root?.classList.remove('grh-resizing')
+      }
+      // Persist as a percentage of the viewport.
+      if (this.settings) {
+        this.settings.panelWidthPct = Math.round((this.state.widthPx / window.innerWidth) * 100)
+        this.state.widthPct = this.settings.panelWidthPct
+        saveSettings(this.settings)
+      }
+      this.render()
+    }
+    document.addEventListener('pointermove', onMove)
+    document.addEventListener('pointerup', onUp)
+  }
+
   private applyPushContent() {
     if (!this.settings?.pushContent) return
     document.documentElement.style.transition = 'margin-right 0.28s ease'
-    const width = this.state.mode === 'compact' ? '300px' : `${this.state.widthPct}vw`
-    document.documentElement.style.marginRight =
-      this.state.open && !this.state.collapsed ? width : ''
+    const width =
+      this.state.collapsed
+        ? '46px'
+        : this.state.mode === 'compact'
+        ? '300px'
+        : `${this.state.widthPx}px`
+    document.documentElement.style.marginRight = this.state.open ? width : ''
   }
 
   private render() {
@@ -98,7 +149,7 @@ class PanelController {
         theme={this.state.theme}
         collapsed={this.state.collapsed}
         mode={this.state.mode}
-        widthPct={this.state.widthPct}
+        width={this.state.widthPx}
         cards={this.state.cards}
         history={this.state.history}
         historyOpen={this.state.historyOpen}
@@ -110,6 +161,7 @@ class PanelController {
           this.state.collapsed = !this.state.collapsed
           this.render()
         }}
+        onResizeStart={this.startResize}
         onToggleMode={() => {
           this.state.mode = this.state.mode === 'compact' ? 'expanded' : 'compact'
           if (this.settings) {

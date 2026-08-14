@@ -18,13 +18,14 @@ export interface PanelProps {
   theme: 'light' | 'dark'
   collapsed: boolean
   mode: 'compact' | 'expanded'
-  widthPct: number
+  width: number
   cards: Card[]
   history: LookupResult[]
   historyOpen: boolean
   onClose: () => void
   onToggleCollapse: () => void
   onToggleMode: () => void
+  onResizeStart: (e: React.PointerEvent) => void
   onToggleHistory: () => void
   onPinCard: (id: string) => void
   onCloseCard: (id: string) => void
@@ -131,135 +132,153 @@ export function Panel(props: PanelProps) {
     theme,
     collapsed,
     mode,
-    widthPct,
+    width,
     cards,
     history,
     historyOpen,
   } = props
 
   const compact = mode === 'compact'
-  const dims = compact
-    ? { width: 300, minWidth: 260, maxWidth: 320 }
-    : { width: `${widthPct}vw`, minWidth: 320, maxWidth: 560 }
+
+  if (collapsed) {
+    return (
+      <div className="grh-root grh-collapsed" data-theme={theme} data-testid="grh-panel">
+        <button
+          className="grh-reopen"
+          title="Expand German Reading Helper"
+          data-testid="panel-collapse-button"
+          onClick={props.onToggleCollapse}
+        >
+          <span className="grh-dot">ä</span>
+          <span className="grh-reopen-label">German Reading Helper</span>
+          <span className="grh-reopen-chevron">‹</span>
+        </button>
+      </div>
+    )
+  }
+
+  const dims = {
+    width: compact ? 300 : width,
+    minWidth: compact ? 260 : 320,
+    maxWidth: compact ? 320 : 760,
+  }
 
   return (
     <div
-      className={`grh-root${collapsed ? ' grh-collapsed' : ''}${compact ? ' grh-compact' : ''}`}
+      className={`grh-root${compact ? ' grh-compact' : ''}`}
       data-theme={theme}
       data-testid="grh-panel"
       style={dims}
     >
+      {!compact && (
+        <div
+          className="grh-resize"
+          data-testid="panel-resize-handle"
+          title="Drag to resize"
+          onPointerDown={props.onResizeStart}
+        />
+      )}
       <div className="grh-header">
         <div className="grh-brand">
           <span className="grh-dot">ä</span>
-          {!collapsed && <span className="grh-brand-name">German Reading Helper</span>}
+          <span className="grh-brand-name">German Reading Helper</span>
         </div>
         <span className="grh-spacer" />
-        {!collapsed && (
-          <button
-            className="grh-iconbtn"
-            title={compact ? 'Switch to expanded mode' : 'Switch to compact mode'}
-            data-testid="panel-mode-button"
-            onClick={props.onToggleMode}
-          >
-            {compact ? '⤢' : '⤡'}
-          </button>
-        )}
-        {!collapsed && (
-          <button
-            className="grh-iconbtn"
-            title="Settings"
-            data-testid="panel-settings-button"
-            onClick={props.onOpenSettings}
-          >
-            ⚙
-          </button>
-        )}
         <button
-          className={`grh-iconbtn${collapsed ? ' grh-tab' : ''}`}
-          title={collapsed ? 'Expand' : 'Collapse'}
+          className="grh-iconbtn"
+          title={compact ? 'Switch to expanded mode' : 'Switch to compact mode'}
+          data-testid="panel-mode-button"
+          onClick={props.onToggleMode}
+        >
+          {compact ? '⤢' : '⤡'}
+        </button>
+        <button
+          className="grh-iconbtn"
+          title="Settings"
+          data-testid="panel-settings-button"
+          onClick={props.onOpenSettings}
+        >
+          ⚙
+        </button>
+        <button
+          className="grh-iconbtn"
+          title="Collapse to side"
           data-testid="panel-collapse-button"
           onClick={props.onToggleCollapse}
         >
-          {collapsed ? '‹' : '›'}
+          ›
         </button>
-        {!collapsed && (
-          <button
-            className="grh-iconbtn"
-            title="Close"
-            data-testid="panel-close-button"
-            onClick={props.onClose}
-          >
-            ✕
-          </button>
+        <button
+          className="grh-iconbtn"
+          title="Close"
+          data-testid="panel-close-button"
+          onClick={props.onClose}
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="grh-body">
+        {cards.length === 0 ? (
+          <div className="grh-empty" data-testid="panel-empty">
+            <span className="grh-emoji">📖</span>
+            Select German text on the page, then right-click and choose
+            <b> Translate</b> or <b> Explain Grammar</b>.
+          </div>
+        ) : (
+          cards.map((c) => (
+            <CardView
+              key={c.id}
+              card={c}
+              onPin={props.onPinCard}
+              onClose={props.onCloseCard}
+            />
+          ))
         )}
       </div>
 
-      {!collapsed && (
-        <>
-          <div className="grh-body">
-            {cards.length === 0 ? (
-              <div className="grh-empty" data-testid="panel-empty">
-                <span className="grh-emoji">📖</span>
-                Select German text on the page, then right-click and choose
-                <b> Translate</b> or <b> Explain Grammar</b>.
-              </div>
-            ) : (
-              cards.map((c) => (
-                <CardView
-                  key={c.id}
-                  card={c}
-                  onPin={props.onPinCard}
-                  onClose={props.onCloseCard}
-                />
-              ))
-            )}
-          </div>
-
-          <div className="grh-history" data-testid="panel-history">
-            <div className="grh-hist-head" onClick={props.onToggleHistory} data-testid="history-toggle">
-              <span>{historyOpen ? '▾' : '▸'}</span>
-              <span>Recent ({history.length})</span>
-              <span className="grh-spacer" />
-              {history.length > 0 && (
-                <button
-                  className="grh-linkbtn"
-                  data-testid="history-clear-button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    props.onClearHistory()
-                  }}
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-            {historyOpen && (
-              <div className="grh-hist-list">
-                {history.length === 0 && (
-                  <div className="grh-empty" style={{ padding: '14px' }}>
-                    No lookups yet.
-                  </div>
-                )}
-                {history.map((h) => (
-                  <button
-                    key={h.id}
-                    className="grh-hist-item"
-                    data-testid="history-item"
-                    onClick={() => props.onOpenHistory(h)}
-                  >
-                    <div className="grh-hist-meta">
-                      {h.action === 'translate' ? 'Translate' : 'Grammar'} ·{' '}
-                      {new Date(h.ts).toLocaleDateString()}
-                    </div>
-                    <div className="grh-hist-text">{h.sourceText}</div>
-                  </button>
-                ))}
+      <div className="grh-history" data-testid="panel-history">
+        <div className="grh-hist-head" onClick={props.onToggleHistory} data-testid="history-toggle">
+          <span>{historyOpen ? '▾' : '▸'}</span>
+          <span>Recent ({history.length})</span>
+          <span className="grh-spacer" />
+          {history.length > 0 && (
+            <button
+              className="grh-linkbtn"
+              data-testid="history-clear-button"
+              onClick={(e) => {
+                e.stopPropagation()
+                props.onClearHistory()
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        {historyOpen && (
+          <div className="grh-hist-list">
+            {history.length === 0 && (
+              <div className="grh-empty" style={{ padding: '14px' }}>
+                No lookups yet.
               </div>
             )}
+            {history.map((h) => (
+              <button
+                key={h.id}
+                className="grh-hist-item"
+                data-testid="history-item"
+                onClick={() => props.onOpenHistory(h)}
+              >
+                <div className="grh-hist-meta">
+                  {h.action === 'translate' ? 'Translate' : 'Grammar'} ·{' '}
+                  {new Date(h.ts).toLocaleDateString()}
+                </div>
+                <div className="grh-hist-text">{h.sourceText}</div>
+              </button>
+            ))}
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   )
 }

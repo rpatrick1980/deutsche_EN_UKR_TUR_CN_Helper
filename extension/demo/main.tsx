@@ -31,7 +31,7 @@ const translateCard: Card = {
     English: 'The Rhine is one of the longest rivers in Europe.',
     Ukrainian: 'Рейн — одна з найдовших річок Європи.',
     Turkish: 'Ren, Avrupa’nın en uzun nehirlerinden biridir.',
-    Chinese: '莱茵河是欧洲最长的河流之一。',
+    Chinese: '萊茵河是歐洲最長的河流之一。',
   },
 }
 
@@ -59,18 +59,35 @@ const noop = () => {}
 function Demo() {
   const [mode, setMode] = useState<'compact' | 'expanded'>(initialMode)
   const [historyOpen, setHistoryOpen] = useState(true)
+  const [collapsed, setCollapsed] = useState(false)
+  const [width, setWidth] = useState(Math.round(window.innerWidth * 0.26))
+
+  const clamp = (px: number) => Math.max(320, Math.min(Math.min(760, window.innerWidth * 0.8), px))
+
+  const onResizeStart = (e: React.PointerEvent) => {
+    e.preventDefault()
+    const onMove = (ev: PointerEvent) => setWidth(clamp(window.innerWidth - ev.clientX))
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerup', onUp)
+    }
+    document.addEventListener('pointermove', onMove)
+    document.addEventListener('pointerup', onUp)
+  }
+
   return (
     <Panel
       theme={initialTheme}
-      collapsed={false}
+      collapsed={collapsed}
       mode={mode}
-      widthPct={26}
+      width={width}
       cards={cards}
       history={history}
       historyOpen={historyOpen}
       onClose={noop}
-      onToggleCollapse={noop}
+      onToggleCollapse={() => setCollapsed((c) => !c)}
       onToggleMode={() => setMode((m) => (m === 'compact' ? 'expanded' : 'compact'))}
+      onResizeStart={onResizeStart}
       onToggleHistory={() => setHistoryOpen((v) => !v)}
       onPinCard={noop}
       onCloseCard={noop}

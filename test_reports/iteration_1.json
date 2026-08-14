@@ -1,0 +1,24 @@
+{
+  "summary": "Frontend-only testing of the German Reading Helper demo build (real Panel component in Shadow DOM) on the preview URL. Verified all 3 reported bug fixes plus mode-toggle regression, dark/compact/grammar variants and the settings page. All checks passed; no console errors, no error elements on page.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Demo panel (expanded)", "issues": ["Panel overlays page content in the demo (settings has a 'Push page content aside' option that is off by default) - expected but worth noting; article text is partially hidden behind the panel at 760px width."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Panel.tsx: collapsed branch and expanded header both use data-testid='panel-collapse-button'. It works because only one renders at a time, but distinct testids (e.g. panel-restore-button) would be less ambiguous.",
+    "Panel.tsx has a redundant `{!collapsed && (...)}` guard inside the expanded return (collapsed already returns early) - dead condition, safe to remove."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (no backend testing requested)", "frontend": "100%"},
+  "seed_data_creation": "None - demo page uses static mocked translation/grammar data",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Verified on 1920x1080 desktop viewport. BUG1: CHINESE row renders Traditional '萊茵河是歐洲最長的河流之一。' (prompts.ts line 12 requests Traditional/Taiwan). BUG2: collapse -> class grh-collapsed, width 46px, vertical label 'German Reading Helper'; restore click returns panel to exact original width (499px). FEATURE3: drag on panel-resize-handle left +150px grew width 499->644.5; drag right shrank; clamps verified at max 760 and min 320. Regression: mode-button toggles expanded<->compact (300px), compact hides brand name, source quotes and the resize handle; toggling back restores expanded and re-renders the handle. Dark variant data-theme=dark, grammar variant shows only grammar card, settings.html loads 200 with full form. Playwright data-testid locators pierce the shadow root without extra handling.",
+  "rca_of_the_issue": "N/A - all reported bugs verified fixed."
+}

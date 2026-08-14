@@ -51,3 +51,13 @@ FastAPI proxy can be added later.
 
 ## Build
 cd extension && yarn install && yarn build  → load `extension/dist` unpacked in Chrome.
+
+
+## Iteration (2026-06) — bug fixes + resize
+- BUG: Chinese now Traditional (Taiwan) — prompts.ts requests 正體/繁體中文 (Taiwan).
+- BUG: Collapse now shows a slim right-edge tab with a clear restore button that
+  returns the panel to its exact original width (Panel.tsx grh-reopen / grh-collapsed).
+- FEATURE: Panel is drag-resizable via a left-edge handle (data-testid panel-resize-handle);
+  width clamps 320px..min(760, 80vw) and persists as panelWidthPct. Compact mode hides the handle.
+- Verified by testing_agent iteration_1.json: frontend 100%, all 3 items pass; 11/11 logic unit tests pass.
+- Downloadable zips refreshed: frontend/public/german-reading-helper-dist.zip (+ -source.zip).

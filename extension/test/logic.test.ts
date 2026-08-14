@@ -1,5 +1,6 @@
 import { detectGerman } from '../src/services/germanDetect'
 import { validateText } from '../src/services/textExtraction'
+import { buildTranslationMessages } from '../src/services/prompts'
 
 let pass = 0
 let fail = 0
@@ -22,6 +23,10 @@ check('noisy symbols rejected', !validateText('#### @@@ 12345 !!!!').ok)
 check('empty rejected', !validateText('   ').ok)
 check('valid german passes', validateText('Viele Städte wurden an seinen Ufern gegründet.').ok)
 check('english passes german gate? should fail', !validateText('The quick brown fox jumps over the lazy dog today.').ok)
+
+// Prompt: Chinese must be Traditional (Taiwan)
+const tmsg = JSON.stringify(buildTranslationMessages('Hallo Welt', ['Chinese']))
+check('translation prompt requests Traditional Chinese', /Traditional Chinese/i.test(tmsg) && /Taiwan/i.test(tmsg))
 
 console.log(`\n${pass} passed, ${fail} failed`)
 if (fail > 0) process.exit(1)

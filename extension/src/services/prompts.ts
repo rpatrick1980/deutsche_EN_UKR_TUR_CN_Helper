@@ -9,7 +9,7 @@ export function buildTranslationMessages(text: string, languages: TargetLanguage
     'If the source is clearly NOT German, return {"error":"NOT_GERMAN"}.',
     'Otherwise return {"translations": { "<Language>": "<translation>", ... }}',
     `Provide a translation for EACH of these target languages: ${langList}.`,
-    'Chinese means Simplified Chinese. Keep each translation concise and natural.',
+    'Chinese means Traditional Chinese as used in Taiwan (正體中文/繁體中文). Keep each translation concise and natural.',
   ].join(' ')
 
   const user = `Translate this German text into: ${langList}\n\nGERMAN TEXT:\n"""\n${text}\n"""`
