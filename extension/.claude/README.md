@@ -21,6 +21,16 @@ Claude Code auto-loads `CLAUDE.md` (in this `extension/` folder) as project memo
 It contains the architecture, data flow, conventions, and a "where to change X" table.
 Read it before making changes.
 
+## Permissions (`.claude/settings.json`)
+Pre-approves safe dev commands so common work runs without per-step confirmation:
+- **Auto-allowed:** file Read/Edit/Write, `yarn build`/tests, `npx vite build`,
+  `npx tsc`, `npx esbuild`, `node`, the asset scripts, and read-only git.
+- **Asks first:** installing/removing dependencies, Playwright install, `git push`.
+- **Denied:** reading `.env`/secret files, `rm -rf`, `git reset --hard`,
+  `git push --force`, and raw `curl`/`wget`.
+`defaultMode` is `acceptEdits` (file edits apply without prompting; risky shell
+commands still gated). Adjust to taste; commit changes to keep the team in sync.
+
 ## Notes
 - Keep the conventions in `CLAUDE.md` (shadow-DOM panel, imperative controller,
   storage-only-via-services, data-testids, strict-JSON prompts, no secrets in code).
