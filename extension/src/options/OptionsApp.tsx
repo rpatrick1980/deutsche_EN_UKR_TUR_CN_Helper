@@ -135,6 +135,22 @@ export function Options() {
             />
             <span>Push page content aside (instead of overlaying it)</span>
           </label>
+          <div className="opt-field">
+            <span>Default panel mode</span>
+            <div className="opt-segment" data-testid="settings-panelmode">
+              {(['expanded', 'compact'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className={`opt-seg-btn${settings.panelMode === m ? ' active' : ''}`}
+                  data-testid={`settings-panelmode-${m}`}
+                  onClick={() => update({ panelMode: m })}
+                >
+                  {m === 'expanded' ? 'Expanded' : 'Compact'}
+                </button>
+              ))}
+            </div>
+          </div>
           <label className="opt-field">
             <span>Panel width: {settings.panelWidthPct}% of viewport</span>
             <input

@@ -174,4 +174,19 @@ export const PANEL_STYLES = `
 .grh-linkbtn:hover { text-decoration: underline; }
 
 .grh-tab { transform: rotate(180deg); writing-mode: vertical-rl; }
+
+/* Compact mode: denser layout, hide source quote + brand name, smaller type. */
+.grh-root.grh-compact .grh-header { padding: 9px 10px; }
+.grh-root.grh-compact .grh-brand-name { display: none; }
+.grh-root.grh-compact .grh-body { padding: 10px; gap: 9px; }
+.grh-root.grh-compact .grh-card-head { padding: 7px 9px; }
+.grh-root.grh-compact .grh-card-body { padding: 9px 10px; }
+.grh-root.grh-compact .grh-source { display: none; }
+.grh-root.grh-compact .grh-lang-row { margin-bottom: 8px; }
+.grh-root.grh-compact .grh-lang-text { font-size: 13.5px; line-height: 1.4; }
+.grh-root.grh-compact .grh-lang-label { font-size: 10px; }
+.grh-root.grh-compact .grh-explain { font-size: 12.8px; line-height: 1.5; }
+.grh-root.grh-compact .grh-explain ul { padding-left: 15px; }
+.grh-root.grh-compact .grh-hist-head { padding: 9px 11px; font-size: 11px; }
+.grh-root.grh-compact .grh-hist-text { font-size: 12px; }
 `

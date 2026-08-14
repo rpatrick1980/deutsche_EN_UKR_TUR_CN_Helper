@@ -25,6 +25,7 @@ export const DEFAULT_SETTINGS: Settings = {
   enabledLanguages: allEnabled(),
   darkMode: false,
   pushContent: false,
+  panelMode: 'expanded',
   panelWidthPct: 25,
   historyAutoExpireDays: 30,
   historyLimit: 50,

@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Panel, Card } from '../src/content/Panel'
 import { PANEL_STYLES } from '../src/content/panel-styles'
 import { LookupResult } from '../src/shared/types'
 
-const theme = location.hash === '#dark' ? 'dark' : 'light'
+const initialTheme = location.hash.includes('dark') ? 'dark' : 'light'
+const initialMode = location.hash.includes('compact') ? 'compact' : 'expanded'
 
 const host = document.createElement('div')
 const shadow = host.attachShadow({ mode: 'open' })
@@ -15,7 +16,7 @@ const mount = document.createElement('div')
 shadow.appendChild(mount)
 document.body.appendChild(host)
 
-const cards: Card[] = [
+const baseCards: Card[] = [
   {
     id: 'c1',
     action: 'translate',
@@ -51,21 +52,29 @@ const history: LookupResult[] = [
 
 const noop = () => {}
 
-createRoot(mount).render(
-  <Panel
-    theme={theme}
-    collapsed={false}
-    widthPct={25}
-    cards={cards}
-    history={history}
-    historyOpen={true}
-    onClose={noop}
-    onToggleCollapse={noop}
-    onToggleHistory={noop}
-    onPinCard={noop}
-    onCloseCard={noop}
-    onOpenHistory={noop}
-    onClearHistory={noop}
-    onOpenSettings={noop}
-  />
-)
+function Demo() {
+  const [mode, setMode] = useState<'compact' | 'expanded'>(initialMode)
+  const [historyOpen, setHistoryOpen] = useState(true)
+  return (
+    <Panel
+      theme={initialTheme}
+      collapsed={false}
+      mode={mode}
+      widthPct={25}
+      cards={baseCards}
+      history={history}
+      historyOpen={historyOpen}
+      onClose={noop}
+      onToggleCollapse={noop}
+      onToggleMode={() => setMode((m) => (m === 'compact' ? 'expanded' : 'compact'))}
+      onToggleHistory={() => setHistoryOpen((v) => !v)}
+      onPinCard={noop}
+      onCloseCard={noop}
+      onOpenHistory={noop}
+      onClearHistory={noop}
+      onOpenSettings={noop}
+    />
+  )
+}
+
+createRoot(mount).render(<Demo />)

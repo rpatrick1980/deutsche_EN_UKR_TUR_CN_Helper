@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy — German Reading Helper</title>
+    <style>
+      :root { --accent:#3b4cca; --accent2:#0e9f9a; --text:#16181d; --muted:#5b6270; --bg:#f6f7fb; }
+      * { box-sizing: border-box; }
+      body { margin:0; background:var(--bg); color:var(--text);
+        font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.65; }
+      header { background:linear-gradient(120deg,var(--accent),var(--accent2)); color:#fff; padding:40px 24px; }
+      .wrap { max-width:760px; margin:0 auto; padding:0 24px; }
+      header .wrap { padding:0; }
+      header h1 { margin:0; font-size:26px; }
+      header p { margin:6px 0 0; opacity:.9; font-size:14px; }
+      main { padding:32px 0 64px; }
+      h2 { font-size:18px; margin:28px 0 8px; }
+      p, li { font-size:15px; color:#2a2f3a; }
+      .muted { color:var(--muted); font-size:13px; }
+      a { color:var(--accent); }
+      .card { background:#fff; border:1px solid #e2e5ef; border-radius:14px; padding:22px 26px; margin-top:20px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <h1>German Reading Helper — Privacy Policy</h1>
+        <p>Last updated: June 2026</p>
+      </div>
+    </header>
+    <main class="wrap">
+      <div class="card">
+        <p><strong>Summary:</strong> German Reading Helper does not track your browsing,
+        does not run automatically, and does not send data to any server we operate.
+        The only data leaving your device is the German text you explicitly choose to
+        translate or explain, which is sent directly to OpenAI.</p>
+
+        <h2>What the extension does</h2>
+        <p>When you select German text on a webpage and choose <em>Translate</em> or
+        <em>Explain Grammar</em> from the right-click menu, the selected text is sent
+        to the OpenAI API using the API key you provide, to generate a translation or
+        grammar explanation. This happens only on your explicit action.</p>
+
+        <h2>Data we collect</h2>
+        <p>None on our servers. We operate no backend and receive no data.</p>
+
+        <h2>Data stored on your device</h2>
+        <ul>
+          <li>Your settings (API key, enabled languages, theme, panel preferences).</li>
+          <li>A local history of recent lookups (auto-expires; default 30 days).</li>
+          <li>A local cache of recent results (auto-expires after 7 days).</li>
+        </ul>
+        <p>All of this is stored via Chrome's local storage on your computer and can be
+        cleared any time from the extension's Settings page or by removing the extension.</p>
+
+        <h2>Data sent to third parties</h2>
+        <p>The text you select is sent to <strong>OpenAI</strong> only when you trigger a
+        Translate or Explain Grammar action, in order to produce the result. Your use of
+        OpenAI is governed by OpenAI's privacy policy at
+        <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noreferrer">openai.com/policies/privacy-policy</a>.
+        No other third parties receive any data.</p>
+
+        <h2>Permissions</h2>
+        <ul>
+          <li><strong>contextMenus</strong> — adds the right-click actions.</li>
+          <li><strong>storage</strong> — saves your settings, history and cache locally.</li>
+          <li><strong>activeTab</strong> — acts on the tab where you invoked the action.</li>
+          <li><strong>scripting</strong> — shows a "please reload" notice when needed.</li>
+          <li><strong>api.openai.com host access</strong> — to call the OpenAI API directly.</li>
+        </ul>
+
+        <h2>Contact</h2>
+        <p class="muted">For questions about this policy, contact the developer through the
+        Chrome Web Store listing support channel.</p>
+      </div>
+    </main>
+  </body>
+</html>

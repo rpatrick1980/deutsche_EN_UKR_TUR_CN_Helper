@@ -15,6 +15,7 @@ export interface Settings {
   enabledLanguages: Record<TargetLanguage, boolean>
   darkMode: boolean
   pushContent: boolean
+  panelMode: 'compact' | 'expanded'
   panelWidthPct: number
   historyAutoExpireDays: number
   historyLimit: number

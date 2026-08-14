@@ -34,15 +34,18 @@ FastAPI proxy can be added later.
   NOT_GERMAN safety from AI.
 - Phase 4: fixed right overlay panel (~25%, 20–40% configurable), overlay/push modes,
   collapse/close, history list, local caching (7-day TTL), dark mode, result pinning.
-- Phase 5 (partial): minimal permissions + rationale, privacy text, README with build/
-  load-unpacked/publish notes.
+- Phase 4b: compact vs expanded panel mode (header toggle + default in Settings, persisted).
+- Phase 5: minimal permissions + rationale, hosted privacy policy page
+  (frontend/public/privacy.html + store-assets/privacy-policy.html), README, and
+  Web Store assets — promo tiles (440x280, 1400x560), feature graphic + screenshot
+  (1280x800), and listing copy in extension/store-assets/ (regen: build_assets.py).
 - Verified: `yarn build` produces valid dist/manifest.json; 10/10 logic unit tests pass;
-  panel visually verified via /grh-demo preview.
+  panel (expanded + compact) visually verified via /grh-demo; privacy page live.
 
 ## Not done / backlog
 - P1: FastAPI proxy for Web Store hardening (code is structured for it).
-- P1: Web Store listing assets (screenshots, promo tiles) + hosted privacy policy page.
-- P2: compact vs expanded panel mode; per-site enable/disable; PDF text handling.
+- P2: per-site enable/disable; PDF text handling; optional live screenshots from the
+  loaded extension for the listing.
 - Note: real end-to-end Chrome behavior (context menu → live page) must be verified by
   loading unpacked in Chrome — cannot be automated in this environment.
 

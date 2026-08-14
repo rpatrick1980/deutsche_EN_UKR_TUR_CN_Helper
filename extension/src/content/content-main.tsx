@@ -3,7 +3,7 @@ import { createRoot, Root } from 'react-dom/client'
 import { Panel, Card } from './Panel'
 import { PANEL_STYLES } from './panel-styles'
 import { getSelectedText, extractFromElement, validateText } from '../services/textExtraction'
-import { getSettings, addHistory, getHistory, clearHistory } from '../services/storage'
+import { getSettings, saveSettings, addHistory, getHistory, clearHistory } from '../services/storage'
 import {
   ActionType,
   LookupResult,
@@ -44,6 +44,7 @@ class PanelController {
   private state = {
     open: false,
     collapsed: false,
+    mode: 'expanded' as 'compact' | 'expanded',
     theme: 'light' as 'light' | 'dark',
     widthPct: 25,
     cards: [] as Card[],
@@ -55,6 +56,7 @@ class PanelController {
     this.settings = await getSettings()
     this.state.theme = this.settings.darkMode ? 'dark' : 'light'
     this.state.widthPct = this.settings.panelWidthPct
+    this.state.mode = this.settings.panelMode
     this.state.history = await getHistory()
 
     if (this.host) return
@@ -76,8 +78,9 @@ class PanelController {
   private applyPushContent() {
     if (!this.settings?.pushContent) return
     document.documentElement.style.transition = 'margin-right 0.28s ease'
+    const width = this.state.mode === 'compact' ? '300px' : `${this.state.widthPct}vw`
     document.documentElement.style.marginRight =
-      this.state.open && !this.state.collapsed ? `${this.state.widthPct}vw` : ''
+      this.state.open && !this.state.collapsed ? width : ''
   }
 
   private render() {
@@ -94,6 +97,7 @@ class PanelController {
       <Panel
         theme={this.state.theme}
         collapsed={this.state.collapsed}
+        mode={this.state.mode}
         widthPct={this.state.widthPct}
         cards={this.state.cards}
         history={this.state.history}
@@ -104,6 +108,14 @@ class PanelController {
         }}
         onToggleCollapse={() => {
           this.state.collapsed = !this.state.collapsed
+          this.render()
+        }}
+        onToggleMode={() => {
+          this.state.mode = this.state.mode === 'compact' ? 'expanded' : 'compact'
+          if (this.settings) {
+            this.settings.panelMode = this.state.mode
+            saveSettings(this.settings)
+          }
           this.render()
         }}
         onToggleHistory={() => {

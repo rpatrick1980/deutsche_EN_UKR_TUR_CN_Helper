@@ -17,12 +17,14 @@ export interface Card {
 export interface PanelProps {
   theme: 'light' | 'dark'
   collapsed: boolean
+  mode: 'compact' | 'expanded'
   widthPct: number
   cards: Card[]
   history: LookupResult[]
   historyOpen: boolean
   onClose: () => void
   onToggleCollapse: () => void
+  onToggleMode: () => void
   onToggleHistory: () => void
   onPinCard: (id: string) => void
   onCloseCard: (id: string) => void
@@ -128,25 +130,41 @@ export function Panel(props: PanelProps) {
   const {
     theme,
     collapsed,
+    mode,
     widthPct,
     cards,
     history,
     historyOpen,
   } = props
 
+  const compact = mode === 'compact'
+  const dims = compact
+    ? { width: 300, minWidth: 260, maxWidth: 320 }
+    : { width: `${widthPct}vw`, minWidth: 320, maxWidth: 560 }
+
   return (
     <div
-      className={`grh-root${collapsed ? ' grh-collapsed' : ''}`}
+      className={`grh-root${collapsed ? ' grh-collapsed' : ''}${compact ? ' grh-compact' : ''}`}
       data-theme={theme}
       data-testid="grh-panel"
-      style={{ width: `${widthPct}vw`, minWidth: 320, maxWidth: 560 }}
+      style={dims}
     >
       <div className="grh-header">
         <div className="grh-brand">
           <span className="grh-dot">ä</span>
-          {!collapsed && <span>German Reading Helper</span>}
+          {!collapsed && <span className="grh-brand-name">German Reading Helper</span>}
         </div>
         <span className="grh-spacer" />
+        {!collapsed && (
+          <button
+            className="grh-iconbtn"
+            title={compact ? 'Switch to expanded mode' : 'Switch to compact mode'}
+            data-testid="panel-mode-button"
+            onClick={props.onToggleMode}
+          >
+            {compact ? '⤢' : '⤡'}
+          </button>
+        )}
         {!collapsed && (
           <button
             className="grh-iconbtn"
