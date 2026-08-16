@@ -9,6 +9,7 @@ const v = params.get('v') || ''
 const initialTheme = v === 'dark' ? 'dark' : 'light'
 const initialMode = v === 'compact' ? 'compact' : 'expanded'
 const grammarOnly = v === 'grammar'
+const longText = v === 'long'
 
 const host = document.createElement('div')
 const shadow = host.attachShadow({ mode: 'open' })
@@ -47,7 +48,32 @@ const grammarCard: Card = {
     '- "kontrollierten" = verb, 3rd person plural, simple past (Präteritum)\n- Infinitive: kontrollieren (to control); weak verb, stem + -ten\n- Active voice, indicative mood\n- "zahlreiche Fürsten" = subject (nominative, plural)\n- "den Handel" = direct object (accusative, masculine singular)',
 }
 
-const cards: Card[] = grammarOnly ? [grammarCard] : [translateCard, grammarCard]
+const longTranslateCard: Card = {
+  id: 'cl',
+  action: 'translate',
+  sourceText:
+    'Im Mittelalter kontrollierten zahlreiche Fürsten den Handel entlang des Flusses und erhoben Zölle von den Kaufleuten, was den Warenverkehr erheblich verteuerte.',
+  languages: ['English', 'Ukrainian', 'Turkish', 'Chinese'],
+  status: 'result',
+  pinned: false,
+  ts: Date.now(),
+  translations: {
+    English:
+      'In the Middle Ages, numerous princes controlled trade along the river and levied tolls on the merchants, which considerably increased the cost of moving goods and slowed commerce throughout the whole region.',
+    Ukrainian:
+      'У середні віки численні князі контролювали торгівлю вздовж річки та стягували мита з купців, що значно підвищувало вартість перевезення товарів і сповільнювало торгівлю в усьому регіоні протягом століть.',
+    Turkish:
+      'Orta Çağ’da çok sayıda prens nehir boyunca ticareti kontrol ediyor ve tüccarlardan geçiş vergisi alıyordu; bu da malların taşınma maliyetini önemli ölçüde artırıyor ve tüm bölgede ticareti yavaşlatıyordu.',
+    Chinese:
+      '在中世紀，眾多諸侯控制著沿河的貿易，並向商人徵收通行稅，這大大提高了貨物運輸的成本，並使整個地區的商業活動長期放緩。',
+  },
+}
+
+const cards: Card[] = longText
+  ? [longTranslateCard]
+  : grammarOnly
+  ? [grammarCard]
+  : [translateCard, grammarCard]
 
 const history: LookupResult[] = [
   { id: 'h1', ts: Date.now() - 86400000, action: 'translate', sourceText: 'Viele Städte wurden an seinen Ufern gegründet.', languages: ['English'] },

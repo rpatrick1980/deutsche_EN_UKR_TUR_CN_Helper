@@ -24,6 +24,7 @@ export const PANEL_STYLES = `
   z-index: 2147483000;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: var(--grh-bg);
   border-left: 1px solid var(--grh-border);
   box-shadow: var(--grh-shadow);
@@ -94,6 +95,7 @@ export const PANEL_STYLES = `
 
 .grh-header {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 8px;
   padding: 12px 14px;
@@ -104,10 +106,13 @@ export const PANEL_STYLES = `
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  overflow: hidden;
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.2px;
 }
+.grh-brand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .grh-dot {
   width: 22px; height: 22px; border-radius: 7px; flex: 0 0 auto;
   background: linear-gradient(135deg, var(--grh-accent), var(--grh-accent-2));
@@ -130,13 +135,16 @@ export const PANEL_STYLES = `
 .grh-iconbtn:active { transform: scale(0.94); }
 
 .grh-body {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+/* Children must keep their natural height so the body can overflow and scroll. */
+.grh-body > * { flex: 0 0 auto; }
 
 .grh-card {
   border: 1px solid var(--grh-border);
@@ -196,13 +204,13 @@ export const PANEL_STYLES = `
 .grh-empty { color: var(--grh-muted); font-size: 14px; text-align: center; padding: 40px 16px; line-height: 1.6; }
 .grh-empty .grh-emoji { font-size: 30px; display:block; margin-bottom: 10px; }
 
-.grh-history { border-top: 1px solid var(--grh-border); }
+.grh-history { flex: 0 0 auto; border-top: 1px solid var(--grh-border); }
 .grh-hist-head {
   display: flex; align-items: center; gap: 8px; padding: 11px 14px;
   font-family: sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.4px;
   text-transform: uppercase; color: var(--grh-muted); cursor: pointer; user-select: none;
 }
-.grh-hist-list { padding: 0 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.grh-hist-list { padding: 0 10px 12px; display: flex; flex-direction: column; gap: 6px; max-height: 30vh; overflow-y: auto; }
 .grh-hist-item {
   text-align: left; border: 1px solid var(--grh-border); background: var(--grh-surface);
   border-radius: 9px; padding: 8px 10px; cursor: pointer; font-family: inherit;

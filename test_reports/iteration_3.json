@@ -1,0 +1,21 @@
+{
+  "summary": "Re-tested the previously FAILED scroll bug (iteration_2) on the demo build plus regression on normal/grammar/compact/collapse/resize. Scroll fix is CONFIRMED WORKING with committed code: on ?v=long at 1280x600 the [data-testid='panel-body'] container has scrollHeight 741 vs clientHeight 388 (overflow-y:auto, flex 1 1 auto, min-height 0) and its children compute to flex '0 0 auto'. Programmatic scrollTo and real mouse-wheel both scroll the body (scrollTop 353) and the CHINESE row ('在中世紀…') becomes fully inside the body's client rect. All four labels ENGLISH/UKRAINIAN/TURKISH/CHINESE are reachable. Header (top:0, brand+4 buttons visible) and the 'Recent (2)' history block (bottom:600 = viewport bottom) stay pinned while only the body scrolls. Regression: normal variant shows 2 cards with all 4 language rows; ?v=grammar shows exactly 5 bullets; ?v=compact is 300px wide with .grh-source display:none and no resize handle; mode toggle returns to expanded (499px); collapse -> 46px and restore -> 499px; drag-resize handle widened panel 499 -> 698px. No console errors observed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Panel header at narrow width (~330px, e.g. 1280px viewport)", "issues": ["Brand text 'German Reading Helper' wraps to two lines next to the 4 icon buttons, making the header taller/uneven; consider truncating with ellipsis or nowrap"]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_3.json"],
+  "action_items": ["Optional polish only: prevent brand-name wrap in the header at narrow panel widths (white-space:nowrap + text-overflow:ellipsis)."],
+  "critical_code_review_comments": ["panel-styles.ts scroll architecture is correct: .grh-body flex:1 1 auto + min-height:0 + overflow-y:auto with '.grh-body > * { flex:0 0 auto }' and pinned header/history (flex:0 0 auto). No further change needed for the reported bug."],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only request, no backend involved)", "frontend": "100% (12/12 assertions passed)"},
+  "seed_data_creation": "None - demo uses static mocked data.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Demo URLs: /grh-demo/index.html (normal), ?v=long, ?v=grammar, ?v=compact, ?v=dark. Panel lives in an OPEN shadow root; data-testid locators pierce it, but for computed styles/rects use page.evaluate with [...document.querySelectorAll('*')].filter(e=>e.shadowRoot)[0].shadowRoot. Use viewport height 600 to force overflow. Scroll bug from iteration_2 is fixed and verified in iteration_3; only remaining nit is header brand-name wrapping at narrow widths.",
+  "rca_of_the_issue": "Original bug: translation cards were flex children of the flex-column .grh-body and shrank (default flex-shrink:1) instead of overflowing, so the body never produced a scrollbar and lower language rows were clipped. Fix ('.grh-body > * { flex: 0 0 auto }' + min-height:0 + overflow-y:auto) makes cards keep natural height so the body overflows and scrolls. Verified in the committed build."
+}

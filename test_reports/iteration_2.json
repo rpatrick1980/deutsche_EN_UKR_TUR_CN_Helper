@@ -1,0 +1,40 @@
+{
+  "summary": "Frontend-only re-test of the reported 'translation output not scrollable' bug on the demo build (Shadow DOM Panel). BUG IS NOT FIXED. On ?v=long at 1280x600 the scroll container [data-testid=\"grh-panel\"] .grh-body reports scrollHeight == clientHeight (388 == 388), so no scrollbar exists and the Ukrainian/Turkish/Chinese rows are clipped and unreachable (mouse wheel over the body produced scrollTop=0; programmatic scrollTo also stayed at 0). Root cause isolated and verified by live CSS injection. Regression checks on normal / grammar / compact variants all PASS.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Panel / panel-styles.ts (.grh-card inside .grh-body)",
+        "issue": "Long translation content is clipped and unreachable. .grh-body correctly has flex:1 1 auto; min-height:0; overflow-y:auto, BUT its children (.grh-card) are flex items with default flex-shrink:1 and .grh-card has overflow:hidden. The card is therefore compressed from its natural 711px content height down to 360px and clips its own overflow, so .grh-body's scrollHeight never exceeds clientHeight -> no scrollbar is ever created. Measured: cardHeight=360, cardScrollHeight=711, bodyClientHeight=388, bodyScrollHeight=388, flex-shrink=1, card overflow=hidden. Chinese row ('在中世紀…') is NOT reachable: fullyVisible=false before and after scrolling body to bottom (scrollTop stayed 0); mouse wheel over the body also did nothing.",
+        "selector": "[data-testid=\"grh-panel\"] .grh-body > .grh-card",
+        "priority": "CRITICAL"
+      },
+      {
+        "component": "panel-styles.ts (.grh-history)",
+        "issue": "Minor/robustness: .grh-history is also a flex child of .grh-root with default flex-shrink:1, so once the body scrolls correctly the history block can still be squeezed on very short viewports. Recommend flex: 0 0 auto on .grh-history (and .grh-header) to guarantee they stay pinned at their natural height.",
+        "selector": "[data-testid=\"panel-history\"]",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "In /app/extension/src/content/panel-styles.ts add `flex: 0 0 auto;` to `.grh-card` (or `.grh-body > *`) so cards keep their natural content height instead of being shrunk by the flex container. Verified fix (injected live): `.grh-body > * { flex: 0 0 auto; } .grh-card { overflow: visible; }` -> bodyScrollHeight became 741 vs clientHeight 388, scrolling to bottom made the Chinese row fully visible (scrollTop=353).",
+    "Because .grh-card uses overflow:hidden only to clip its rounded corners, replace it with `overflow: clip` on the header/rounded parts or keep overflow:hidden ONLY after flex-shrink is disabled — with flex-shrink:0 alone the clipping no longer hides content (re-verify).",
+    "Add `flex: 0 0 auto` to `.grh-header` and `.grh-history` so they remain pinned on short viewports.",
+    "Re-run the scroll test at viewport 1280x600 on ?v=long and assert body.scrollHeight > body.clientHeight and that the Chinese row is fully inside the body client rect after scrollTo(0, scrollHeight)."
+  ],
+  "critical_code_review_comments": [
+    "The reported fix only addressed the scroll container (.grh-body) but not its flex children; in a `display:flex; flex-direction:column` container, children shrink by default, which defeats overflow-y:auto. This is the actual cause of the user's clipped-translation report.",
+    "There is no data-testid on the scroll container itself; tests must reach it via a CSS class ('.grh-body'). Adding data-testid=\"panel-body\" would make this regression test stable."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "N/A", "frontend": "80% (4/5 scenarios pass; the primary scroll bug fix FAILS)" },
+  "seed_data_creation": "None - demo page uses static mocked OpenAI data",
+  "should_call_test_agent_after_fix": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Test URLs: /grh-demo/index.html (normal, 2 cards), ?v=long (single long translate card - use for scroll test), ?v=grammar (grammar only, 5 bullets), ?v=compact (300px width, .grh-source display:none). Panel is in an OPEN shadow root; Playwright data-testid selectors pierce it. Use viewport 1280x600 to force overflow. Verified in this run: header stays pinned (y=0,h=57) and Recent/history stays pinned (y=444.6) while body scrolls; page itself does not scroll the panel; no console errors; all 4 language labels present in DOM in every translate variant.",
+  "rca_of_the_issue": "`.grh-body` is `display:flex; flex-direction:column` with `overflow-y:auto; min-height:0` (correct). However `.grh-card` children inherit the default `flex-shrink:1`, so the card is compressed from its natural 711px to the available 360px, and `.grh-card { overflow:hidden }` clips the overflowing text. Consequently the body's content never exceeds its client box (scrollHeight 388 == clientHeight 388) and no scrollbar is generated, leaving Ukrainian/Turkish/Chinese rows visually cut off and unreachable by wheel or programmatic scroll. Reproduce: open ?v=long at 1280x600, evaluate scrollHeight/clientHeight on '[data-testid=\"grh-panel\"] .grh-body'. Mitigation: set `flex: 0 0 auto` on the cards / `.grh-body > *`."
+}

@@ -61,3 +61,12 @@ cd extension && yarn install && yarn build  → load `extension/dist` unpacked i
   width clamps 320px..min(760, 80vw) and persists as panelWidthPct. Compact mode hides the handle.
 - Verified by testing_agent iteration_1.json: frontend 100%, all 3 items pass; 11/11 logic unit tests pass.
 - Downloadable zips refreshed: frontend/public/german-reading-helper-dist.zip (+ -source.zip).
+
+## Iteration (2026-06) — translation panel scroll fix
+- BUG: long translations clipped — only top (English) row showed; lower languages unreachable.
+- ROOT CAUSE: cards were flex children of the flex-column body and shrank (flex-shrink:1),
+  so the body never overflowed and no scrollbar appeared.
+- FIX (panel-styles.ts): .grh-body flex:1 1 auto + min-height:0 + overflow-y:auto;
+  '.grh-body > * { flex:0 0 auto }'; header + history flex:0 0 auto (pinned);
+  .grh-hist-list max-height:30vh scroll; added data-testid="panel-body"; header brand-name nowrap/ellipsis.
+- Verified: testing_agent iteration_3.json frontend 100% (12/12) — all 4 languages reachable via body scroll; regressions pass. Zips refreshed.

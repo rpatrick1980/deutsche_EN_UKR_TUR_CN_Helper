@@ -218,7 +218,7 @@ export function Panel(props: PanelProps) {
         </button>
       </div>
 
-      <div className="grh-body">
+      <div className="grh-body" data-testid="panel-body">
         {cards.length === 0 ? (
           <div className="grh-empty" data-testid="panel-empty">
             <span className="grh-emoji">📖</span>
