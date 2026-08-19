@@ -1,0 +1,25 @@
+{
+  "summary": "Verified the two requested changes (grammar output in GERMAN, Chinese = TRADITIONAL) via code review of prompts.ts, the 14/14 logic unit tests, and live demo rendering on the preview URL, plus regression on normal/long/compact variants. RESULT: 100% pass (26/26 assertions). (1) CODE REVIEW prompts.ts: buildGrammarMessages system prompt contains 'Write the ENTIRE explanation in GERMAN (auf Deutsch)... do NOT use English' with no 'in clear ENGLISH' remnant; buildTranslationMessages contains 'Chinese means Traditional Chinese as used in Taiwan (正體中文/繁體中文). Use ONLY Traditional Chinese characters, NEVER Simplified'. (2) Unit tests re-run (npx esbuild test/logic.test.ts -> node): 14 passed / 0 failed, including 'translation prompt requests Traditional Chinese', 'forbids Simplified Chinese', 'grammar prompt requests German output', 'grammar prompt does not force English output'. (3) DEMO ?v=grammar: [data-testid='grammar-explanation'] renders 5 German bullets containing Verb, Präteritum, Infinitiv, schwaches Verb, 'Aktiv, Indikativ', 'Subjekt (Nominativ, Plural)', Akkusativobjekt; contains NO English terms (direct object / simple past / weak verb / 'Subject (Nominative'). (4) TRADITIONAL CHINESE: normal variant CHINESE row is exactly '萊茵河是歐洲最長的河流之一。' - contains 萊/歐/長, contains none of 莱/欧/长; ?v=long Chinese starts '在中世紀' with no Simplified 中世纪. Served bundle confirmed fresh (assets/index-0LoYfjVr.js contains Präteritum, 萊茵河, 在中世紀, Akkusativobjekt; zero occurrences of 莱茵 or 'direct object'). (5) REGRESSION: normal variant shows all 4 rows ENGLISH/UKRAINIAN/TURKISH/CHINESE; ?v=long at 1280x600 panel-body scrollHeight 741 vs clientHeight 390, overflow-y auto, scroll to bottom brings Chinese row fully inside body rect (scroll fix from iteration_3 still holds); ?v=compact is exactly 300px, .grh-source computed display:none, no resize handle, Chinese still Traditional and grammar still German, mode toggle restores expanded width 499px. No console errors on any variant.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Panel header at narrow panel width (~330px)", "issues": ["Pre-existing nit carried from iteration_3: brand text 'German Reading Helper' wraps/truncates at narrow widths. Not a blocker."]}
+    ]
+  },
+  "test_report_links": ["/app/extension/test/logic.test.ts", "/app/test_reports/iteration_4.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "prompts.ts is correct for both asks; no change needed. Minor robustness suggestion: the grammar prompt only instructs German output - since the model may still drift to English, consider a short one-shot German example in the system message for higher compliance in the real (non-mocked) OpenAI path.",
+    "Traditional-vs-Simplified cannot be enforced client-side; the prompt instruction is the only guard. Optional hardening: post-process the Chinese translation through a Simplified-char detector and retry once if Simplified chars are found.",
+    "package.json has no 'test' script; logic tests must be run via the esbuild+node command documented in CLAUDE.md. Adding \"test\": \"npx esbuild test/logic.test.ts --bundle --platform=node --format=cjs --outfile=/tmp/t.cjs && node /tmp/t.cjs\" would make CI/agent runs simpler."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only, OpenAI mocked in demo)", "frontend": "100% (26/26 assertions passed); unit tests 14/14"},
+  "seed_data_creation": "None - demo uses static mocked data in demo/main.tsx.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Demo URLs: /grh-demo/index.html (normal), ?v=grammar, ?v=long, ?v=compact, ?v=dark. Panel is in an OPEN shadow root; data-testid text locators pierce it, but for computed styles/rects use page.evaluate with [...document.querySelectorAll('*')].find(e=>e.shadowRoot).shadowRoot. Panel root testid is 'grh-panel' (NOT 'panel'); body is 'panel-body'. Run logic tests with: cd /app/extension && npx esbuild test/logic.test.ts --bundle --platform=node --format=cjs --outfile=/tmp/t.cjs && node /tmp/t.cjs. German-grammar output and Traditional-Chinese verified in iteration_4; scroll fix from iteration_3 still verified. No open bugs.",
+  "rca_of_the_issue": "No new issues. Both reported bugs (grammar explained in English instead of German; Chinese possibly Simplified) are fixed at the prompt level in prompts.ts and reflected in demo mock data; real-world correctness depends on OpenAI following the prompt, which is untestable here since OpenAI is mocked."
+}

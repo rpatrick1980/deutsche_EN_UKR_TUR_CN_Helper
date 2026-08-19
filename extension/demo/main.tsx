@@ -45,7 +45,7 @@ const grammarCard: Card = {
   pinned: false,
   ts: Date.now(),
   explanation:
-    '- "kontrollierten" = verb, 3rd person plural, simple past (Präteritum)\n- Infinitive: kontrollieren (to control); weak verb, stem + -ten\n- Active voice, indicative mood\n- "zahlreiche Fürsten" = subject (nominative, plural)\n- "den Handel" = direct object (accusative, masculine singular)',
+    '- „kontrollierten" = Verb, 3. Person Plural, Präteritum (einfache Vergangenheit)\n- Infinitiv: kontrollieren; schwaches Verb, Stamm + -ten\n- Aktiv, Indikativ\n- „zahlreiche Fürsten" = Subjekt (Nominativ, Plural)\n- „den Handel" = Akkusativobjekt (maskulin, Singular)',
 }
 
 const longTranslateCard: Card = {

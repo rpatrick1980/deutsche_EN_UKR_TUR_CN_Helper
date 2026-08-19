@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:only": "vite build",
+    "test": "npx esbuild test/logic.test.ts --bundle --platform=node --format=cjs --outfile=/tmp/grh.test.cjs && node /tmp/grh.test.cjs",
     "preview": "vite preview"
   },
   "dependencies": {

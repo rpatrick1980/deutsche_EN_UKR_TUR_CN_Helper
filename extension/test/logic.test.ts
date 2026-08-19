@@ -1,6 +1,6 @@
 import { detectGerman } from '../src/services/germanDetect'
 import { validateText } from '../src/services/textExtraction'
-import { buildTranslationMessages } from '../src/services/prompts'
+import { buildTranslationMessages, buildGrammarMessages } from '../src/services/prompts'
 
 let pass = 0
 let fail = 0
@@ -27,6 +27,12 @@ check('english passes german gate? should fail', !validateText('The quick brown 
 // Prompt: Chinese must be Traditional (Taiwan)
 const tmsg = JSON.stringify(buildTranslationMessages('Hallo Welt', ['Chinese']))
 check('translation prompt requests Traditional Chinese', /Traditional Chinese/i.test(tmsg) && /Taiwan/i.test(tmsg))
+check('translation prompt forbids Simplified Chinese', /never simplified/i.test(tmsg))
+
+// Prompt: grammar explanation must be in German
+const gmsg = JSON.stringify(buildGrammarMessages('Der Hund läuft schnell.'))
+check('grammar prompt requests German output', /in GERMAN/i.test(gmsg) && /auf Deutsch/i.test(gmsg))
+check('grammar prompt does not force English output', !/in clear ENGLISH/i.test(gmsg))
 
 console.log(`\n${pass} passed, ${fail} failed`)
 if (fail > 0) process.exit(1)

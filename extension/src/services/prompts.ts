@@ -9,7 +9,7 @@ export function buildTranslationMessages(text: string, languages: TargetLanguage
     'If the source is clearly NOT German, return {"error":"NOT_GERMAN"}.',
     'Otherwise return {"translations": { "<Language>": "<translation>", ... }}',
     `Provide a translation for EACH of these target languages: ${langList}.`,
-    'Chinese means Traditional Chinese as used in Taiwan (正體中文/繁體中文). Keep each translation concise and natural.',
+    'Chinese means Traditional Chinese as used in Taiwan (正體中文/繁體中文). Use ONLY Traditional Chinese characters, NEVER Simplified. Keep each translation concise and natural.',
   ].join(' ')
 
   const user = `Translate this German text into: ${langList}\n\nGERMAN TEXT:\n"""\n${text}\n"""`
@@ -28,7 +28,8 @@ export function buildGrammarMessages(text: string) {
     '- Single word: give gender (der/die/das) if a noun, part of speech, and relevant forms (person, number, tense/aspect, case).',
     '- Sentence: cover key parts of speech, tense, and include mood and voice where relevant.',
     '- Paragraph: give a short meaning summary, then a short grammar-pattern summary.',
-    'Explain in clear ENGLISH so learners from different backgrounds can follow.',
+    'Write the ENTIRE explanation in GERMAN (auf Deutsch). Use clear, simple German suitable for learners (about A2–B1 level); do NOT use English.',
+    'Example of the expected German style: "- „Hund" = Nomen, maskulin (der Hund), Nominativ Singular".',
     'Return ONLY a JSON object. If the input is clearly NOT German, return {"error":"NOT_GERMAN"}.',
     'Otherwise return {"explanation": "- point one\\n- point two\\n..."} using "-" bullets separated by newlines.',
   ].join(' ')

@@ -70,3 +70,11 @@ cd extension && yarn install && yarn build  → load `extension/dist` unpacked i
   '.grh-body > * { flex:0 0 auto }'; header + history flex:0 0 auto (pinned);
   .grh-hist-list max-height:30vh scroll; added data-testid="panel-body"; header brand-name nowrap/ellipsis.
 - Verified: testing_agent iteration_3.json frontend 100% (12/12) — all 4 languages reachable via body scroll; regressions pass. Zips refreshed.
+
+## Iteration (2026-06) — grammar language + Chinese script
+- BUG: "Explain Grammar" output was in English → now written in GERMAN (auf Deutsch, A2–B1),
+  with a German one-shot example in the prompt for real-model compliance. (services/prompts.ts)
+- CHECK/HARDEN: Chinese translation is Traditional (Taiwan) — prompt now says "Use ONLY
+  Traditional Chinese characters, NEVER Simplified".
+- Added `yarn test` script; logic tests now 14/14 (incl. German-grammar + Traditional/Simplified assertions).
+- Verified: testing_agent iteration_4.json 100% (26/26) — demo grammar renders German, Chinese rows Traditional; regressions pass. Zips refreshed.
