@@ -86,3 +86,8 @@ android-sdk/
 credentials.json
 *.key
 .credentials
+
+# Built Chrome extension (load unpacked from extension/dist)
+!extension/dist/
+!extension/dist/**
+!german-reading-helper-chrome.zip
