@@ -78,3 +78,12 @@ cd extension && yarn install && yarn build  → load `extension/dist` unpacked i
   Traditional Chinese characters, NEVER Simplified".
 - Added `yarn test` script; logic tests now 14/14 (incl. German-grammar + Traditional/Simplified assertions).
 - Verified: testing_agent iteration_4.json 100% (26/26) — demo grammar renders German, Chinese rows Traditional; regressions pass. Zips refreshed.
+
+## Iteration (2026-06) — always-visible scrollbars
+- User report: no scrollbar on translated output / Recent list. Root cause: scrolling worked but Chrome
+  (macOS overlay scrollbars) hides the bar until you scroll, so long results looked clipped.
+- Fix: panel-styles.ts adds ::-webkit-scrollbar styling (10px, themed track/thumb, 6px on source quote) on
+  .grh-body, .grh-hist-list, .grh-source → forces always-visible non-overlay scrollbars; overscroll-behavior: contain.
+- Demo variant `?v=paragraph` (very long paragraph + 14 history items). Verified with
+  store-assets/check_scrollbars.py (Playwright, scrollbars not hidden): body barW=10, hist barW=10.
+- dist rebuilt, /app/german-reading-helper-chrome.zip refreshed (manifest.json at root).

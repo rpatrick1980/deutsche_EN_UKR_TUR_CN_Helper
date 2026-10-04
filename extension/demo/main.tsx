@@ -10,6 +10,7 @@ const initialTheme = v === 'dark' ? 'dark' : 'light'
 const initialMode = v === 'compact' ? 'compact' : 'expanded'
 const grammarOnly = v === 'grammar'
 const longText = v === 'long'
+const paragraph = v === 'paragraph'
 
 const host = document.createElement('div')
 const shadow = host.attachShadow({ mode: 'open' })
@@ -69,16 +70,39 @@ const longTranslateCard: Card = {
   },
 }
 
-const cards: Card[] = longText
+const repeat = (s: string, n: number) => Array.from({ length: n }, () => s).join(' ')
+const paragraphCard: Card = {
+  ...longTranslateCard,
+  id: 'cp',
+  sourceText: repeat(longTranslateCard.sourceText, 4),
+  translations: {
+    English: repeat(longTranslateCard.translations!.English!, 5),
+    Ukrainian: repeat(longTranslateCard.translations!.Ukrainian!, 5),
+    Turkish: repeat(longTranslateCard.translations!.Turkish!, 5),
+    Chinese: repeat(longTranslateCard.translations!.Chinese!, 5),
+  },
+}
+
+const cards: Card[] = paragraph
+  ? [paragraphCard]
+  : longText
   ? [longTranslateCard]
   : grammarOnly
   ? [grammarCard]
   : [translateCard, grammarCard]
 
-const history: LookupResult[] = [
+const baseHistory: LookupResult[] = [
   { id: 'h1', ts: Date.now() - 86400000, action: 'translate', sourceText: 'Viele Städte wurden an seinen Ufern gegründet.', languages: ['English'] },
   { id: 'h2', ts: Date.now() - 2 * 86400000, action: 'grammar', sourceText: 'erhoben', languages: [] },
 ]
+const history: LookupResult[] = paragraph
+  ? Array.from({ length: 14 }, (_, i) => ({
+      ...baseHistory[i % 2],
+      id: `h${i}`,
+      ts: Date.now() - i * 86400000,
+      sourceText: `${i + 1}. ${baseHistory[i % 2].sourceText}`,
+    }))
+  : baseHistory
 
 const noop = () => {}
 

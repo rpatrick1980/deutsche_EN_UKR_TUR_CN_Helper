@@ -1,0 +1,3 @@
+# built demo bundle (lint ignore)
+frontend/public/grh-demo/assets/
+extension/dist/
