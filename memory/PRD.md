@@ -113,3 +113,7 @@ Backlog: Proxy hardening (P0 for Web Store), copy buttons, learner level (A1–B
 - Learner level setting: Settings.level 'A1'|'A2'|'B1'|'B2', default **B1** (user choice). LEVEL_GUIDE in prompts.ts
   shapes German complexity of dictionary notes/examples and chat answers. Options page segment (settings-level-*).
 - Unit tests 31/31; settings demo screenshot verified (B1 default, toggles). dist + chrome.zip rebuilt.
+
+## Fix (2026-06) — false "reload this page" alert
+- Cause: content script never answered RUN_ACTION → sendMessage callback saw lastError (port closed) → alert even though delivered.
+- Fix: content script sendResponse({received:true}); service worker deliverRunAction() = try → inject manifest content_scripts js → retry; alert removed.

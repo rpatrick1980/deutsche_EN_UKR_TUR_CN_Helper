@@ -363,8 +363,9 @@ class PanelController {
 
 const controller = new PanelController()
 
-chrome.runtime.onMessage.addListener((message: RunActionMessage) => {
+chrome.runtime.onMessage.addListener((message: RunActionMessage, _sender, sendResponse) => {
   if (message?.type === 'RUN_ACTION') {
+    sendResponse({ received: true })
     controller.run(message.selectionText)
   }
 })

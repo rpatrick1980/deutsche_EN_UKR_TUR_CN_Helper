@@ -21,25 +21,44 @@ chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage()
 })
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+// Pages opened before the extension was (re)loaded have no content script yet:
+// inject it on demand and retry instead of bothering the user.
+// The content script acknowledges with {received:true}; a rejection means no receiver.
+async function deliverRunAction(tabId: number, message: RunActionMessage) {
+  const tryDeliver = async () => {
+    const res = await chrome.tabs.sendMessage(tabId, message)
+    if (!res?.received) throw new Error('no receiver')
+  }
+  try {
+    await tryDeliver()
+    return
+  } catch {
+    // no receiver yet
+  }
+  const files = chrome.runtime.getManifest().content_scripts?.[0]?.js ?? []
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files })
+  } catch {
+    return // restricted page (chrome://, Web Store, PDF viewer) — nothing we can do
+  }
+  for (let i = 0; i < 20; i++) {
+    await sleep(150)
+    try {
+      await tryDeliver()
+      return
+    } catch {
+      // loader still importing the module
+    }
+  }
+}
+
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab?.id || info.menuItemId !== CONTEXT_MENU.lookup) return
-  const message: RunActionMessage = {
+  deliverRunAction(tab.id, {
     type: 'RUN_ACTION',
     selectionText: (info.selectionText ?? '').trim(),
-  }
-  chrome.tabs.sendMessage(tab.id, message, () => {
-    if (chrome.runtime.lastError) {
-      // Content script not present (page loaded before install, or restricted page).
-      chrome.scripting
-        .executeScript({
-          target: { tabId: tab.id! },
-          func: () =>
-            alert(
-              'German Reading Helper: please reload this page once, then try again. (The extension cannot run on this page — e.g. Chrome Web Store or chrome:// pages.)'
-            ),
-        })
-        .catch(() => {})
-    }
   })
 })
 

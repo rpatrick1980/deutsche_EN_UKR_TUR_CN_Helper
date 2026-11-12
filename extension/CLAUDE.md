@@ -100,7 +100,7 @@ User right-clicks selection
         ▼
 background/service-worker.ts
   contextMenus.onClicked ──► chrome.tabs.sendMessage(tab, {RUN_ACTION, selectionText})
-        │ (if no content script: scripting.executeScript shows a "reload page" alert)
+        │ (if no content script yet: scripting.executeScript injects manifest content_scripts js, then retries ~3s; silent on restricted pages)
         ▼
 content/content-main.tsx  (PanelController)
   1. resolve text:  selectionText → window.getSelection() → extractFromElement(lastRightClicked)
