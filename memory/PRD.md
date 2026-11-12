@@ -87,3 +87,22 @@ cd extension && yarn install && yarn build  → load `extension/dist` unpacked i
 - Demo variant `?v=paragraph` (very long paragraph + 14 history items). Verified with
   store-assets/check_scrollbars.py (Playwright, scrollbars not hidden): body barW=10, hist barW=10.
 - dist rebuilt, /app/german-reading-helper-chrome.zip refreshed (manifest.json at root).
+
+## Iteration (2026-06) — Translate and Explain, dictionary, chat, pronunciation
+User decisions: OpenAI voice for TTS; sentences/paragraphs → translation only (no grammar); 3 example
+sentences German only; chat answers ALWAYS German; speak button reads the whole selected text.
+- Single context-menu action "Translate and Explain" (CONTEXT_MENU.lookup). ActionType removed; LookupMode 'word'|'text'
+  via detectLookupMode (≤2 words, no sentence punctuation → word).
+- History (Recent) UI + storage removed; Settings history section removed. Cache (7d) kept.
+- Chinese removed: TargetLanguage = English | Ukrainian | Turkish.
+- Word mode: German dictionary entry {lemma, wordType, article, plural, inflection(stark/schwach), forms, notes[], examples[3]}
+  rendered by DictionaryView. Text mode: translations only.
+- Follow-up chat per card (ChatBox): CHAT_REQUEST → chat/completions, system prompt forces German; history kept on card.
+- Pronunciation: TTS_REQUEST → POST /v1/audio/speech (settings.ttsModel 'tts-1' default | 'tts-1-hd', voice alloy, mp3)
+  → base64 → content plays Audio; cached per card; stop toggle. Settings has "Pronunciation voice quality" select.
+- Demo variants: ?v=word|text|paragraph|loading|error|dark|compact (mocked chat/speak). Unit tests 26/26.
+- testing_agent iteration_5.json: all 9 frontend areas PASS. Real OpenAI calls not executable in pod (need user key).
+- dist rebuilt + /app/german-reading-helper-chrome.zip refreshed. CLAUDE.md / README updated.
+Known caveat: OpenAI TTS voices are English-optimized → German has a slight English accent (provider limit; ElevenLabs
+multilingual would be the upgrade path).
+Backlog: Proxy hardening (P0 for Web Store), copy buttons, learner level (A1–B2), key-word play buttons.

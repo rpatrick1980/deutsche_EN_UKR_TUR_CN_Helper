@@ -1,3 +1,5 @@
+/* oxlint-disable */
+/* eslint-disable */
 function A(e){return e&&e.__esModule&&Object.prototype.hasOwnProperty.call(e,"default")?e.default:e}var j={exports:{}},m={},O={exports:{}},r={};/**
  * @license React
  * react.production.min.js

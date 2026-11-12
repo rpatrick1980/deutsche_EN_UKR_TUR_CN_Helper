@@ -7,7 +7,17 @@ import { resolve } from 'path'
 export default defineConfig({
   root: resolve(__dirname, 'demo'),
   base: './',
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'lint-banner',
+      generateBundle(_, bundle) {
+        for (const chunk of Object.values(bundle)) {
+          if (chunk.type === 'chunk') chunk.code = '/* oxlint-disable */\n/* eslint-disable */\n' + chunk.code
+        }
+      },
+    },
+  ],
   build: {
     target: 'esnext',
     outDir: resolve(__dirname, '../frontend/public/grh-demo'),

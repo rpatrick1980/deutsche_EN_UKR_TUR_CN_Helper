@@ -1,0 +1,34 @@
+{
+  "summary": "Frontend-only verification of the German Reading Helper DEMO build (/grh-demo/index.html + settings.html) which renders the real Panel/Options components with mocked chat/TTS. All 9 requested feature areas PASS (~60 Playwright assertions). Demo build is up to date with src (no newer src files than build), yarn test 26/26 pass, tsc --noEmit clean. Two initial 'failures' were test artifacts: (a) 'Beispiele' label is CSS-uppercased so inner_text returns 'BEISPIELE'; (b) paragraph variant at 1920x1080 fits without overflow (content ~700px) — at 1366x700, 768x1024 and 390x844 panel-body is scrollable (scrollHeight 988-1100 > clientHeight 645-969) and the chat input is reachable via scrolling. Real OpenAI chat/TTS/lookup and the MV3 context menu were NOT executed (code review only).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "content-main speak()", "issue": "ttsError is only cleared inside the `if (!card.audio)` branch. If playback was blocked/errored once with cached audio, clicking 🔊 again plays successfully but the stale error text (tts-error) remains visible.", "selector": "[data-testid=tts-error]", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Chat / TTS / Lookup message passing (real extension)", "issue": "chrome.runtime.sendMessage calls in sendChat(), speak() and run() are not wrapped in try/catch. If it rejects (e.g. 'Extension context invalidated' after the extension updates/reloads while a tab is open), chatStatus stays 'loading' forever (input disabled, typing indicator spinning), ttsStatus stays 'loading' (speak button disabled spinner), or the card stays on 'Translating & explaining…'.", "affected_selectors": ["[data-testid=chat-typing]", "[data-testid=chat-input]", "[data-testid=card-speak-button]", "[data-testid=panel-loading]"]}
+    ],
+    "design_issues": [
+      {"screen": "Panel dark mode", "issues": ["User chat bubble uses a light-purple accent with white text in dark theme — contrast is borderline; consider a darker accent for .grh-msg-user in dark theme."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Wrap chrome.runtime.sendMessage in try/catch in content-main sendChat/speak/run and reset chatStatus/ttsStatus/status with an error message on rejection.",
+    "In speak(), clear card.ttsError (and reset ttsStatus) before every playback attempt, not just when fetching new audio.",
+    "Optional: content-main run() line ~320 falls back to ERROR_COPY.NO_API_KEY when no text is found and no fallbackReason — misleading message; use a 'no text selected' message instead.",
+    "Optional: storage.setCache never prunes expired entries (CACHE_TTL 7 days) — chrome.storage.local has a ~10MB quota without unlimitedStorage; prune expired/oldest on write."
+  ],
+  "critical_code_review_comments": [
+    "Legacy settings with Chinese:true are safely ignored because enabledLanguages() filters by ALL_LANGUAGES — good.",
+    "normalizeEntry slices examples to 3 but does not enforce exactly 3 (model may return fewer) — acceptable, UI handles 0..3.",
+    "Chat history sent to the model is unbounded per card; consider capping last N turns to control token cost.",
+    "TTS input silently truncated to TTS_MAX_CHARS for long paragraphs — consider telling the user."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100% of requested demo features"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Demo URL: $REACT_APP_BACKEND_URL/grh-demo/index.html (?v=word|text|paragraph|loading|error|dark|compact) and /grh-demo/settings.html. Panel lives in open shadow root; Playwright locators pierce it. Use getComputedStyle-insensitive text checks (labels are CSS-uppercased). Verify scrolling at viewport height <=800 for ?v=paragraph. Screenshots taken immediately after load capture the grh-in fade animation (cards look faded) — wait ~500ms. Real OpenAI flows untestable headlessly."
+}
