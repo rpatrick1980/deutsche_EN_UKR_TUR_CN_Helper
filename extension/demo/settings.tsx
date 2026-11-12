@@ -9,6 +9,7 @@ const mem: Record<string, any> = {
     apiKey: 'sk-proj-demo-xxxxxxxxxxxxxxxxxxxxxxxx',
     model: 'gpt-4o-mini',
     ttsModel: 'tts-1',
+    level: 'B1',
     enabledLanguages: { English: true, Ukrainian: true, Turkish: true },
     darkMode: false,
     pushContent: false,

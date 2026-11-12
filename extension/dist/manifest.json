@@ -24,7 +24,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/content-main.tsx-loader-CfwgHEGa.js"
+        "assets/content-main.tsx-loader-Bf05uS3j.js"
       ],
       "matches": [
         "<all_urls>"
@@ -49,9 +49,9 @@
       ],
       "resources": [
         "assets/client-gxHn_UGl.js",
-        "assets/storage-BDR19HJ2.js",
-        "assets/prompts-DfUxn708.js",
-        "assets/content-main.tsx-dZzRUvhk.js"
+        "assets/storage-DeMVG-BP.js",
+        "assets/prompts-DIT7VE1v.js",
+        "assets/content-main.tsx-b-LY9nXI.js"
       ],
       "use_dynamic_url": false
     }

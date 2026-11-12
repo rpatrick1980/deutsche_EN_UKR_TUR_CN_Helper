@@ -7,6 +7,7 @@ export const WORD_MODE_MAX_WORDS = 2
 
 export const DEFAULT_MODEL = 'gpt-4o-mini'
 export const DEFAULT_TTS_MODEL = 'tts-1'
+export const DEFAULT_LEVEL = 'B1'
 export const TTS_VOICE = 'alloy'
 export const TTS_MAX_CHARS = 4096
 
@@ -28,6 +29,7 @@ export const DEFAULT_SETTINGS: Settings = {
   apiKey: '',
   model: DEFAULT_MODEL,
   ttsModel: DEFAULT_TTS_MODEL,
+  level: DEFAULT_LEVEL,
   enabledLanguages: allEnabled(),
   darkMode: false,
   pushContent: false,

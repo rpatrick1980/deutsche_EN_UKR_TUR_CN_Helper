@@ -61,7 +61,7 @@ export async function lookup({ mode, text, languages }: LookupArgs): Promise<Loo
     model: settings.model,
     temperature: 0.2,
     response_format: { type: 'json_object' },
-    messages: buildLookupMessages(text, languages, mode),
+    messages: buildLookupMessages(text, languages, mode, settings.level),
   })
   if (isFail(res)) return res
 
@@ -100,7 +100,7 @@ export async function chat(msg: ChatRequestMessage): Promise<ChatResponseMessage
   const res = await post(CHAT_ENDPOINT, settings.apiKey, {
     model: settings.model,
     temperature: 0.4,
-    messages: buildChatMessages(msg.sourceText, msg.translations, msg.entry, msg.messages),
+    messages: buildChatMessages(msg.sourceText, msg.translations, msg.entry, msg.messages, settings.level),
   })
   if (isFail(res)) return res
 

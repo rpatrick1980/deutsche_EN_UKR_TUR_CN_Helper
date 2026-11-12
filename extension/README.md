@@ -23,6 +23,7 @@ Built with **React + TypeScript + Vite** (Manifest V3).
   Artikel, Plural, stark/schwach, key forms, short notes and 3 example sentences.
   Sentences and paragraphs get translations only.
 - **Follow-up chat** under every result; the tutor always answers in German.
+- **Learner level** (A1–B2, default B1) in Settings tunes the German used in notes, examples and chat.
 - **Pronunciation:** 🔊 plays the selected text with OpenAI text-to-speech
   (`tts-1` or `tts-1-hd`, selectable in Settings).
 - **Result pinning:** pin a result while you look up something else.

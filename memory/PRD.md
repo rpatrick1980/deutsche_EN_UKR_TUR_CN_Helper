@@ -106,3 +106,10 @@ sentences German only; chat answers ALWAYS German; speak button reads the whole 
 Known caveat: OpenAI TTS voices are English-optimized → German has a slight English accent (provider limit; ElevenLabs
 multilingual would be the upgrade path).
 Backlog: Proxy hardening (P0 for Web Store), copy buttons, learner level (A1–B2), key-word play buttons.
+
+## Iteration (2026-06) — code review fixes + Learner Level (B1)
+- Code review: use-toast.js effect deps + reducer split into helpers; App.js useCallback; craco nested ternary → helper;
+  server.py type hints (ruff clean). Scaffold files only, extension unaffected.
+- Learner level setting: Settings.level 'A1'|'A2'|'B1'|'B2', default **B1** (user choice). LEVEL_GUIDE in prompts.ts
+  shapes German complexity of dictionary notes/examples and chat answers. Options page segment (settings-level-*).
+- Unit tests 31/31; settings demo screenshot verified (B1 default, toggles). dist + chrome.zip rebuilt.

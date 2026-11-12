@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Settings, ALL_LANGUAGES, TargetLanguage } from '../shared/types'
+import { Settings, ALL_LANGUAGES, ALL_LEVELS, TargetLanguage } from '../shared/types'
 import { getSettings, saveSettings, clearCache } from '../services/storage'
 
 const MODEL_OPTIONS = [
@@ -119,6 +119,26 @@ export function Options() {
               ))}
             </select>
           </label>
+        </section>
+
+        <section className="opt-card">
+          <h2>Learner level</h2>
+          <p className="opt-hint">
+            Dictionary notes, example sentences and chat answers are written in German at this level.
+          </p>
+          <div className="opt-segment" data-testid="settings-level">
+            {ALL_LEVELS.map((lvl) => (
+              <button
+                key={lvl}
+                type="button"
+                className={`opt-seg-btn${settings.level === lvl ? ' active' : ''}`}
+                data-testid={`settings-level-${lvl}`}
+                onClick={() => update({ level: lvl })}
+              >
+                {lvl}
+              </button>
+            ))}
+          </div>
         </section>
 
         <section className="opt-card">

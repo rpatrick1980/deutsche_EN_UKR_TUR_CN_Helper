@@ -37,6 +37,26 @@ const addToRemoveQueue = (toastId) => {
   toastTimeouts.set(toastId, timeout)
 }
 
+const dismissToasts = (state, toastId) => {
+  if (toastId) {
+    addToRemoveQueue(toastId)
+  } else {
+    state.toasts.forEach((toast) => addToRemoveQueue(toast.id))
+  }
+  return {
+    ...state,
+    toasts: state.toasts.map((t) =>
+      t.id === toastId || toastId === undefined ? { ...t, open: false } : t),
+  }
+}
+
+const removeToast = (state, toastId) => {
+  if (toastId === undefined) {
+    return { ...state, toasts: [] }
+  }
+  return { ...state, toasts: state.toasts.filter((t) => t.id !== toastId) }
+}
+
 export const reducer = (state, action) => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -52,41 +72,14 @@ export const reducer = (state, action) => {
           t.id === action.toast.id ? { ...t, ...action.toast } : t),
       };
 
-    case "DISMISS_TOAST": {
-      const { toastId } = action
+    case "DISMISS_TOAST":
+      return dismissToasts(state, action.toastId)
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
-      if (toastId) {
-        addToRemoveQueue(toastId)
-      } else {
-        state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
-        })
-      }
-
-      return {
-        ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false,
-              }
-            : t),
-      };
-    }
     case "REMOVE_TOAST":
-      if (action.toastId === undefined) {
-        return {
-          ...state,
-          toasts: [],
-        }
-      }
-      return {
-        ...state,
-        toasts: state.toasts.filter((t) => t.id !== action.toastId),
-      };
+      return removeToast(state, action.toastId)
+
+    default:
+      return state
   }
 }
 
@@ -143,7 +136,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     };
-  }, [state])
+  }, [setState])
 
   return {
     ...state,

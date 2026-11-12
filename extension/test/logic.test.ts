@@ -2,6 +2,7 @@ import { detectGerman } from '../src/services/germanDetect'
 import { validateText } from '../src/services/textExtraction'
 import { buildLookupMessages, buildChatMessages, detectLookupMode } from '../src/services/prompts'
 import { ALL_LANGUAGES } from '../src/shared/types'
+import { DEFAULT_SETTINGS } from '../src/shared/constants'
 
 let pass = 0
 let fail = 0
@@ -57,6 +58,13 @@ check('chat system forces German', /IMMER auf Deutsch/.test(cmsg[0].content))
 check('chat system includes source text', /Der Hund läuft\./.test(cmsg[0].content))
 check('chat system includes translations', /English: The dog runs\./.test(cmsg[0].content))
 check('chat drops errored messages', cmsg.length === 3 && cmsg.every((m) => m.content !== 'Fehler'))
+
+// Learner level (default B1)
+check('default level is B1', DEFAULT_SETTINGS.level === 'B1')
+check('lookup prompt defaults to B1 guidance', /Niveau B1/.test(JSON.stringify(buildLookupMessages('Hund', ALL_LANGUAGES, 'word'))))
+check('lookup prompt respects A1', /Niveau A1/.test(JSON.stringify(buildLookupMessages('Hund', ALL_LANGUAGES, 'word', 'A1'))))
+check('chat prompt respects B2', /Niveau B2/.test(buildChatMessages('Hallo', undefined, undefined, [], 'B2')[0].content))
+check('chat prompt defaults to B1', /Niveau B1/.test(buildChatMessages('Hallo', undefined, undefined, [])[0].content))
 
 console.log(`\n${pass} passed, ${fail} failed`)
 if (fail > 0) process.exit(1)

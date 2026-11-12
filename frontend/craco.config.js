@@ -11,6 +11,16 @@ const config = {
   enableHealthCheck: process.env.ENABLE_HEALTH_CHECK === "true",
 };
 
+function resolveServerOption(https) {
+  if (typeof https === "object") {
+    return { type: "https", options: https };
+  }
+  if (https) {
+    return "https";
+  }
+  return "http";
+}
+
 function makeDevServerV5Compatible(devServerConfig) {
   const {
     https,
@@ -21,12 +31,7 @@ function makeDevServerV5Compatible(devServerConfig) {
     ...compatibleConfig
   } = devServerConfig;
 
-  compatibleConfig.server =
-    typeof https === "object"
-      ? { type: "https", options: https }
-      : https
-        ? "https"
-        : "http";
+  compatibleConfig.server = resolveServerOption(https);
   compatibleConfig.headers = {
     ...compatibleConfig.headers,
     "Cross-Origin-Resource-Policy": "same-origin",

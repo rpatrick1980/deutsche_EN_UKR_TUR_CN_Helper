@@ -1,5 +1,16 @@
-import { ChatMessage, DictionaryEntry, LookupMode, TargetLanguage, Translations } from '../shared/types'
+import { ChatMessage, DictionaryEntry, LearnerLevel, LookupMode, TargetLanguage, Translations } from '../shared/types'
 import { WORD_MODE_MAX_WORDS } from '../shared/constants'
+
+const LEVEL_GUIDE: Record<LearnerLevel, string> = {
+  A1: 'Niveau A1 (Anfänger): sehr einfache, kurze Sätze; nur Grundwortschatz; Fachbegriffe immer kurz erklären.',
+  A2: 'Niveau A2 (Grundstufe): einfache Sätze; häufiger Alltagswortschatz; grammatische Begriffe kurz erklären.',
+  B1: 'Niveau B1 (Mittelstufe): klare, alltagsnahe Sprache; gängige grammatische Fachbegriffe dürfen verwendet werden.',
+  B2: 'Niveau B2 (gehobene Mittelstufe): natürliche, differenzierte Sprache; Fachbegriffe und Nuancen sind willkommen.',
+}
+
+export function levelGuide(level: LearnerLevel): string {
+  return LEVEL_GUIDE[level] ?? LEVEL_GUIDE.B1
+}
 
 /** Single word or short lexical unit ("Hund", "der Hund", "sich freuen") → dictionary mode. */
 export function detectLookupMode(text: string): LookupMode {
@@ -8,7 +19,12 @@ export function detectLookupMode(text: string): LookupMode {
   return words.length <= WORD_MODE_MAX_WORDS && !hasSentencePunctuation ? 'word' : 'text'
 }
 
-export function buildLookupMessages(text: string, languages: TargetLanguage[], mode: LookupMode) {
+export function buildLookupMessages(
+  text: string,
+  languages: TargetLanguage[],
+  mode: LookupMode,
+  level: LearnerLevel = 'B1'
+) {
   const langList = languages.join(', ')
   const system = [
     'You are a precise assistant for adult learners of German. The SOURCE text is always German.',
@@ -20,7 +36,9 @@ export function buildLookupMessages(text: string, languages: TargetLanguage[], m
 
   if (mode === 'word') {
     system.push(
-      'The source is a single word (or a word with its article). ALSO add "entry": a dictionary-style entry written ENTIRELY in GERMAN (auf Deutsch, simple A2–B1 German, never English), like a learner dictionary, with these keys:',
+      'The source is a single word (or a word with its article). ALSO add "entry": a dictionary-style entry written ENTIRELY in GERMAN (auf Deutsch, never English), like a learner dictionary.',
+      `Adapt the German of "notes" and "examples" to the learner's level — ${levelGuide(level)}`,
+      'Keys:',
       '"lemma": the Grundform — for nouns WITH the article (e.g. "der Hund"), for verbs the Infinitiv, otherwise the base form.',
       '"wordType": Wortart, e.g. "Nomen", "Verb", "Adjektiv", "Adverb", "Präposition", "Pronomen", "Konjunktion".',
       '"article": "der", "die" or "das" for nouns, otherwise null.',
@@ -47,11 +65,12 @@ export function buildChatMessages(
   sourceText: string,
   translations: Translations | undefined,
   entry: DictionaryEntry | undefined,
-  history: ChatMessage[]
+  history: ChatMessage[],
+  level: LearnerLevel = 'B1'
 ) {
   const context = [
     'Du bist ein geduldiger Deutsch-Tutor für erwachsene Lernende.',
-    'Antworte IMMER auf Deutsch (einfaches, klares Deutsch, Niveau A2–B1), egal in welcher Sprache die Frage gestellt wird. Antworte niemals auf Englisch oder in einer anderen Sprache.',
+    `Antworte IMMER auf Deutsch, egal in welcher Sprache die Frage gestellt wird. Antworte niemals auf Englisch oder in einer anderen Sprache. Sprachniveau des Lernenden: ${levelGuide(level)}`,
     'Antworte kompakt (höchstens 150 Wörter). Nutze bei Bedarf kurze Aufzählungen mit "-" am Zeilenanfang.',
     `Kontext — der Lernende hat diesen deutschen Text ausgewählt:\n"""\n${sourceText}\n"""`,
   ]

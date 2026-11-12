@@ -4,6 +4,9 @@ export const ALL_LANGUAGES: TargetLanguage[] = ['English', 'Ukrainian', 'Turkish
 
 export type TtsModel = 'tts-1' | 'tts-1-hd'
 
+export type LearnerLevel = 'A1' | 'A2' | 'B1' | 'B2'
+export const ALL_LEVELS: LearnerLevel[] = ['A1', 'A2', 'B1', 'B2']
+
 /** 'word' = single word / short lexical unit → dictionary entry; 'text' = sentence/paragraph → translations only. */
 export type LookupMode = 'word' | 'text'
 
@@ -11,6 +14,7 @@ export interface Settings {
   apiKey: string
   model: string
   ttsModel: TtsModel
+  level: LearnerLevel
   enabledLanguages: Record<TargetLanguage, boolean>
   darkMode: boolean
   pushContent: boolean

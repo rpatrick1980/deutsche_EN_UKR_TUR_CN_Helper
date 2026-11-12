@@ -161,6 +161,7 @@ Content ↔ background talk via `chrome.runtime` messages typed in `shared/types
 apiKey: string
 model: string                       // default 'gpt-4o-mini' (see MODEL_OPTIONS in OptionsApp)
 ttsModel: 'tts-1' | 'tts-1-hd'      // pronunciation quality (Settings → OpenAI section)
+level: 'A1' | 'A2' | 'B1' | 'B2'    // learner level, default 'B1' → LEVEL_GUIDE in prompts.ts shapes German complexity
 enabledLanguages: Record<TargetLanguage, boolean>  // English/Ukrainian/Turkish
 darkMode: boolean
 pushContent: boolean
@@ -184,7 +185,7 @@ stored over defaults (so new fields are safe to add).
 - **German-only:** `germanDetect.ts` is lenient for ≤3 words (AI double-checks and can
   return `NOT_GERMAN`). Longer text needs stopword/umlaut signal.
 - **Prompts:** `prompts.ts` requests strict JSON (`response_format: json_object`).
-  Dictionary entry + chat answers must stay **in German** (A2–B1). Examples: exactly 3, German only.
+  Dictionary entry + chat answers must stay **in German**, pitched at `settings.level` (default B1). Examples: exactly 3, German only.
   Sentences/paragraphs get translations only (no grammar) — by user decision.
 - **No secrets in code.** The API key is user-provided and lives only in
   `chrome.storage.local`.
