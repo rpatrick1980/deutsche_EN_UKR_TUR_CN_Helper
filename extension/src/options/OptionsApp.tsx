@@ -203,6 +203,21 @@ export function Options() {
               onChange={(e) => update({ panelWidthPct: Number(e.target.value) })}
             />
           </label>
+          <label className="opt-field">
+            <span>Panel text size: {settings.fontScale}%</span>
+            <input
+              type="range"
+              min={80}
+              max={150}
+              step={5}
+              value={settings.fontScale}
+              data-testid="settings-fontsize-range"
+              onChange={(e) => update({ fontScale: Number(e.target.value) })}
+            />
+            <span className="opt-preview" style={{ fontSize: `${(15 * settings.fontScale) / 100}px` }} data-testid="settings-fontsize-preview">
+              Viele Städte wurden an seinen Ufern gegründet.
+            </span>
+          </label>
         </section>
 
         <section className="opt-card">

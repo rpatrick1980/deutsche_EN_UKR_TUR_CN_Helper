@@ -35,6 +35,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pushContent: false,
   panelMode: 'expanded',
   panelWidthPct: 25,
+  fontScale: 100,
 }
 
 export const CONTEXT_MENU = {

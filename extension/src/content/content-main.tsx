@@ -150,6 +150,7 @@ class PanelController {
         collapsed={this.state.collapsed}
         mode={this.state.mode}
         width={this.state.widthPx}
+        fontScale={this.settings?.fontScale ?? 100}
         cards={this.state.cards}
         onClose={() => {
           this.state.open = false
@@ -283,6 +284,14 @@ class PanelController {
     this.render()
   }
 
+  /** Re-read settings (theme, text size) and re-render while the panel is open. */
+  async refreshSettings() {
+    if (!this.host) return
+    this.settings = await getSettings()
+    this.state.theme = this.settings.darkMode ? 'dark' : 'light'
+    this.render()
+  }
+
   async run(selectionText: string) {
     await this.ensureMounted()
     this.state.open = true
@@ -362,6 +371,10 @@ class PanelController {
 }
 
 const controller = new PanelController()
+
+chrome.storage.onChanged.addListener((_changes, area) => {
+  if (area === 'local') controller.refreshSettings()
+})
 
 chrome.runtime.onMessage.addListener((message: RunActionMessage, _sender, sendResponse) => {
   if (message?.type === 'RUN_ACTION') {

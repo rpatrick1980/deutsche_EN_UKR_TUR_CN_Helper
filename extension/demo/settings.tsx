@@ -15,6 +15,7 @@ const mem: Record<string, any> = {
     pushContent: false,
     panelMode: 'expanded',
     panelWidthPct: 26,
+    fontScale: 100,
   },
 }
 ;(globalThis as any).chrome = {

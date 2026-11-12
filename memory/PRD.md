@@ -117,3 +117,8 @@ Backlog: Proxy hardening (P0 for Web Store), copy buttons, learner level (A1–B
 ## Fix (2026-06) — false "reload this page" alert
 - Cause: content script never answered RUN_ACTION → sendMessage callback saw lastError (port closed) → alert even though delivered.
 - Fix: content script sendResponse({received:true}); service worker deliverRunAction() = try → inject manifest content_scripts js → retry; alert removed.
+
+## Iteration (2026-06) — sans-serif font + text size slider
+- User choice: native system font (-apple-system/Segoe UI stack), +1px everywhere. Serif removed from panel-styles.ts & options.css.
+- Settings.fontScale (80–150%, default 100) slider in Appearance & panel with live preview; Panel prop fontScale → --grh-fs; all panel font-size values are calc(Npx * var(--grh-fs)). Content script listens to chrome.storage.onChanged → re-renders open panel live.
+- Demo: ?fs=125. Verified via screenshot (20px at 125%). dist + zip rebuilt.

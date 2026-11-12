@@ -162,6 +162,7 @@ apiKey: string
 model: string                       // default 'gpt-4o-mini' (see MODEL_OPTIONS in OptionsApp)
 ttsModel: 'tts-1' | 'tts-1-hd'      // pronunciation quality (Settings → OpenAI section)
 level: 'A1' | 'A2' | 'B1' | 'B2'    // learner level, default 'B1' → LEVEL_GUIDE in prompts.ts shapes German complexity
+fontScale: number                   // panel text size %, default 100 → --grh-fs on .grh-root (all font-size use calc(Npx * var(--grh-fs)))
 enabledLanguages: Record<TargetLanguage, boolean>  // English/Ukrainian/Turkish
 darkMode: boolean
 pushContent: boolean

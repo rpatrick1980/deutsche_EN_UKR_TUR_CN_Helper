@@ -9,6 +9,7 @@ const params = new URLSearchParams(location.search)
 const v = params.get('v') || ''
 const initialTheme = v === 'dark' ? 'dark' : 'light'
 const initialMode = v === 'compact' ? 'compact' : 'expanded'
+const fontScale = Number(params.get('fs') || 100)
 
 const host = document.createElement('div')
 const shadow = host.attachShadow({ mode: 'open' })
@@ -153,6 +154,7 @@ function Demo() {
       collapsed={collapsed}
       mode={mode}
       width={width}
+      fontScale={fontScale}
       cards={cards}
       onClose={noop}
       onToggleCollapse={() => setCollapsed((c) => !c)}

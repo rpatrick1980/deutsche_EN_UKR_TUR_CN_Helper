@@ -4,6 +4,7 @@ export const PANEL_STYLES = `
 :host, * { box-sizing: border-box; }
 
 .grh-root {
+  --grh-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, 'Noto Sans', sans-serif;
   --grh-bg: #ffffff;
   --grh-surface: #f6f7fb;
   --grh-surface-2: #eef0f7;
@@ -15,7 +16,7 @@ export const PANEL_STYLES = `
   --grh-danger: #d64545;
   --grh-shadow: 0 8px 40px rgba(20, 24, 45, 0.18);
 
-  font-family: 'Georgia', 'Iowan Old Style', 'Palatino Linotype', serif;
+  font-family: var(--grh-font);
   color: var(--grh-text);
   position: fixed;
   top: 0;
@@ -85,13 +86,13 @@ export const PANEL_STYLES = `
 .grh-reopen-label {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  font-family: sans-serif;
+ 
   font-weight: 700;
-  font-size: 13px;
+  font-size: calc(14px * var(--grh-fs, 1));
   letter-spacing: 0.6px;
   opacity: 0.95;
 }
-.grh-reopen-chevron { font-family: sans-serif; font-size: 20px; font-weight: 800; margin-top: auto; padding-bottom: 16px; }
+.grh-reopen-chevron { font-size: calc(21px * var(--grh-fs, 1)); font-weight: 800; margin-top: auto; padding-bottom: 16px; }
 
 .grh-header {
   display: flex;
@@ -109,15 +110,15 @@ export const PANEL_STYLES = `
   min-width: 0;
   overflow: hidden;
   font-weight: 700;
-  font-size: 14px;
+  font-size: calc(15px * var(--grh-fs, 1));
   letter-spacing: 0.2px;
 }
 .grh-brand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .grh-dot {
   width: 22px; height: 22px; border-radius: 7px; flex: 0 0 auto;
   background: linear-gradient(135deg, var(--grh-accent), var(--grh-accent-2));
-  color: #fff; font-family: sans-serif; font-weight: 800;
-  display: flex; align-items: center; justify-content: center; font-size: 13px;
+  color: #fff; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; font-size: calc(14px * var(--grh-fs, 1));
 }
 .grh-spacer { flex: 1; }
 
@@ -126,10 +127,10 @@ export const PANEL_STYLES = `
   background: var(--grh-bg);
   color: var(--grh-text);
   width: 30px; height: 30px; border-radius: 8px;
-  cursor: pointer; font-size: 15px; line-height: 1;
+  cursor: pointer; font-size: calc(16px * var(--grh-fs, 1)); line-height: 1;
   display: flex; align-items: center; justify-content: center;
   transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
-  font-family: sans-serif;
+ 
 }
 .grh-iconbtn:hover { background: var(--grh-surface-2); border-color: var(--grh-accent); }
 .grh-iconbtn:active { transform: scale(0.94); }
@@ -175,7 +176,7 @@ export const PANEL_STYLES = `
   background: var(--grh-surface-2);
 }
 .grh-pill {
-  font-family: sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.4px;
+  font-size: calc(11.5px * var(--grh-fs, 1)); font-weight: 700; letter-spacing: 0.4px;
   text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
   color: #fff; background: var(--grh-accent);
 }
@@ -183,7 +184,7 @@ export const PANEL_STYLES = `
 .grh-card-body { padding: 11px 13px; }
 
 .grh-source {
-  font-size: 13px; color: var(--grh-muted); font-style: italic;
+  font-size: calc(14px * var(--grh-fs, 1)); color: var(--grh-muted); font-style: italic;
   border-left: 3px solid var(--grh-accent); padding-left: 9px; margin-bottom: 10px;
   max-height: 76px; overflow: auto;
 }
@@ -191,16 +192,16 @@ export const PANEL_STYLES = `
 .grh-lang-row { margin-bottom: 11px; }
 .grh-lang-row:last-child { margin-bottom: 0; }
 .grh-lang-label {
-  font-family: sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+  font-size: calc(12px * var(--grh-fs, 1)); font-weight: 700; letter-spacing: 0.4px;
   text-transform: uppercase; color: var(--grh-accent); margin-bottom: 3px;
 }
-.grh-lang-text { font-size: 15px; line-height: 1.5; }
+.grh-lang-text { font-size: calc(16px * var(--grh-fs, 1)); line-height: 1.5; }
 
-.grh-explain { font-size: 14px; line-height: 1.6; }
+.grh-explain { font-size: calc(15px * var(--grh-fs, 1)); line-height: 1.6; }
 .grh-explain ul { margin: 0; padding-left: 18px; }
 .grh-explain li { margin-bottom: 5px; }
 
-.grh-loading { display: flex; align-items: center; gap: 10px; color: var(--grh-muted); font-size: 14px; padding: 6px 2px; }
+.grh-loading { display: flex; align-items: center; gap: 10px; color: var(--grh-muted); font-size: calc(15px * var(--grh-fs, 1)); padding: 6px 2px; }
 .grh-spinner {
   width: 18px; height: 18px; border-radius: 50%;
   border: 2.5px solid var(--grh-surface-2); border-top-color: var(--grh-accent);
@@ -209,14 +210,14 @@ export const PANEL_STYLES = `
 @keyframes grh-spin { to { transform: rotate(360deg); } }
 
 .grh-error {
-  font-size: 14px; line-height: 1.55; color: var(--grh-text);
+  font-size: calc(15px * var(--grh-fs, 1)); line-height: 1.55; color: var(--grh-text);
   background: rgba(214, 69, 69, 0.08); border: 1px solid rgba(214, 69, 69, 0.35);
   border-radius: 10px; padding: 11px 13px;
 }
-.grh-error b { color: var(--grh-danger); font-family: sans-serif; display: block; margin-bottom: 3px; font-size: 12.5px; letter-spacing: 0.3px; }
+.grh-error b { color: var(--grh-danger); display: block; margin-bottom: 3px; font-size: calc(13.5px * var(--grh-fs, 1)); letter-spacing: 0.3px; }
 
-.grh-empty { color: var(--grh-muted); font-size: 14px; text-align: center; padding: 40px 16px; line-height: 1.6; }
-.grh-empty .grh-emoji { font-size: 30px; display:block; margin-bottom: 10px; }
+.grh-empty { color: var(--grh-muted); font-size: calc(15px * var(--grh-fs, 1)); text-align: center; padding: 40px 16px; line-height: 1.6; }
+.grh-empty .grh-emoji { font-size: calc(31px * var(--grh-fs, 1)); display:block; margin-bottom: 10px; }
 
 .grh-body { overscroll-behavior: contain; }
 
@@ -225,36 +226,36 @@ export const PANEL_STYLES = `
   margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--grh-border);
 }
 .grh-dict-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-.grh-dict-lemma { font-size: 19px; font-weight: 700; color: var(--grh-text); }
+.grh-dict-lemma { font-size: calc(20px * var(--grh-fs, 1)); font-weight: 700; color: var(--grh-text); }
 .grh-dict-meta {
-  font-family: sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+  font-size: calc(12px * var(--grh-fs, 1)); font-weight: 700; letter-spacing: 0.4px;
   text-transform: uppercase; color: var(--grh-accent-2);
 }
 .grh-dict-facts {
   display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0 0 10px;
-  font-size: 13.5px; line-height: 1.45;
+  font-size: calc(14.5px * var(--grh-fs, 1)); line-height: 1.45;
 }
-.grh-dict-facts dt { font-family: sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: var(--grh-muted); padding-top: 2px; }
+.grh-dict-facts dt { font-size: calc(12px * var(--grh-fs, 1)); font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: var(--grh-muted); padding-top: 2px; }
 .grh-dict-facts dd { margin: 0; }
-.grh-dict-notes { margin: 0 0 10px; padding-left: 18px; font-size: 14px; line-height: 1.55; }
+.grh-dict-notes { margin: 0 0 10px; padding-left: 18px; font-size: calc(15px * var(--grh-fs, 1)); line-height: 1.55; }
 .grh-dict-notes li { margin-bottom: 4px; }
-.grh-dict-examples ol { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.55; }
+.grh-dict-examples ol { margin: 0; padding-left: 20px; font-size: calc(15px * var(--grh-fs, 1)); line-height: 1.55; }
 .grh-dict-examples li { margin-bottom: 5px; }
 
 /* Follow-up chat */
 .grh-chat { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--grh-border); }
 .grh-chat-log { display: flex; flex-direction: column; gap: 7px; margin: 6px 0 10px; }
 .grh-msg {
-  max-width: 92%; padding: 8px 11px; border-radius: 12px; font-size: 13.5px; line-height: 1.5;
+  max-width: 92%; padding: 8px 11px; border-radius: 12px; font-size: calc(14.5px * var(--grh-fs, 1)); line-height: 1.5;
   white-space: pre-wrap; word-break: break-word; animation: grh-in 0.2s ease;
 }
 .grh-msg-user { align-self: flex-end; background: var(--grh-accent); color: #fff; border-bottom-right-radius: 4px; }
 .grh-msg-assistant { align-self: flex-start; background: var(--grh-surface-2); border: 1px solid var(--grh-border); border-bottom-left-radius: 4px; }
 .grh-msg-error { border-color: rgba(214, 69, 69, 0.45); color: var(--grh-danger); }
-.grh-msg-typing { display: flex; align-items: center; gap: 8px; color: var(--grh-muted); font-family: sans-serif; font-size: 12.5px; }
+.grh-msg-typing { display: flex; align-items: center; gap: 8px; color: var(--grh-muted); font-size: calc(13.5px * var(--grh-fs, 1)); }
 .grh-chat-row { display: flex; gap: 6px; margin-top: 6px; }
 .grh-chat-input {
-  flex: 1; min-width: 0; font-family: inherit; font-size: 13.5px; color: var(--grh-text);
+  flex: 1; min-width: 0; font-family: inherit; font-size: calc(14.5px * var(--grh-fs, 1)); color: var(--grh-text);
   background: var(--grh-bg); border: 1px solid var(--grh-border); border-radius: 10px; padding: 8px 11px;
   outline: none; transition: border-color 0.15s ease;
 }
@@ -262,7 +263,7 @@ export const PANEL_STYLES = `
 .grh-chat-input:disabled { opacity: 0.6; }
 .grh-chat-send {
   width: 36px; height: 36px; flex: 0 0 auto; border-radius: 10px; border: none; cursor: pointer;
-  background: var(--grh-accent); color: #fff; font-size: 14px; font-family: sans-serif;
+  background: var(--grh-accent); color: #fff; font-size: calc(15px * var(--grh-fs, 1));
   display: flex; align-items: center; justify-content: center; transition: opacity 0.15s ease, transform 0.1s ease;
 }
 .grh-chat-send:hover { opacity: 0.9; }
@@ -273,7 +274,7 @@ export const PANEL_STYLES = `
 .grh-iconbtn.grh-active { background: var(--grh-accent); color: #fff; border-color: var(--grh-accent); }
 .grh-iconbtn:disabled { cursor: default; opacity: 0.7; }
 .grh-spinner-sm { width: 14px; height: 14px; border-width: 2px; }
-.grh-tts-error { font-family: sans-serif; font-size: 12px; color: var(--grh-danger); margin: -4px 0 10px; }
+.grh-tts-error { font-size: calc(13px * var(--grh-fs, 1)); color: var(--grh-danger); margin: -4px 0 10px; }
 
 .grh-tab { transform: rotate(180deg); writing-mode: vertical-rl; }
 
@@ -285,11 +286,11 @@ export const PANEL_STYLES = `
 .grh-root.grh-compact .grh-card-body { padding: 9px 10px; }
 .grh-root.grh-compact .grh-source { display: none; }
 .grh-root.grh-compact .grh-lang-row { margin-bottom: 8px; }
-.grh-root.grh-compact .grh-lang-text { font-size: 13.5px; line-height: 1.4; }
-.grh-root.grh-compact .grh-lang-label { font-size: 10px; }
-.grh-root.grh-compact .grh-explain { font-size: 12.8px; line-height: 1.5; }
+.grh-root.grh-compact .grh-lang-text { font-size: calc(14.5px * var(--grh-fs, 1)); line-height: 1.4; }
+.grh-root.grh-compact .grh-lang-label { font-size: calc(11px * var(--grh-fs, 1)); }
+.grh-root.grh-compact .grh-explain { font-size: calc(13.8px * var(--grh-fs, 1)); line-height: 1.5; }
 .grh-root.grh-compact .grh-explain ul { padding-left: 15px; }
-.grh-root.grh-compact .grh-dict-lemma { font-size: 16px; }
-.grh-root.grh-compact .grh-dict-notes, .grh-root.grh-compact .grh-dict-examples ol { font-size: 12.8px; }
-.grh-root.grh-compact .grh-msg { font-size: 12.5px; }
+.grh-root.grh-compact .grh-dict-lemma { font-size: calc(17px * var(--grh-fs, 1)); }
+.grh-root.grh-compact .grh-dict-notes, .grh-root.grh-compact .grh-dict-examples ol { font-size: calc(13.8px * var(--grh-fs, 1)); }
+.grh-root.grh-compact .grh-msg { font-size: calc(13.5px * var(--grh-fs, 1)); }
 `

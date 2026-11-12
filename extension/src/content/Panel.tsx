@@ -25,6 +25,7 @@ export interface PanelProps {
   collapsed: boolean
   mode: 'compact' | 'expanded'
   width: number
+  fontScale: number
   cards: Card[]
   onClose: () => void
   onToggleCollapse: () => void
@@ -241,12 +242,13 @@ function CardView({
 }
 
 export function Panel(props: PanelProps) {
-  const { theme, collapsed, mode, width, cards } = props
+  const { theme, collapsed, mode, width, cards, fontScale } = props
   const compact = mode === 'compact'
+  const scaleVar = { '--grh-fs': fontScale / 100 } as React.CSSProperties
 
   if (collapsed) {
     return (
-      <div className="grh-root grh-collapsed" data-theme={theme} data-testid="grh-panel">
+      <div className="grh-root grh-collapsed" data-theme={theme} data-testid="grh-panel" style={scaleVar}>
         <button
           className="grh-reopen"
           title="Expand German Reading Helper"
@@ -265,6 +267,7 @@ export function Panel(props: PanelProps) {
     width: compact ? 300 : width,
     minWidth: compact ? 260 : 320,
     maxWidth: compact ? 320 : 760,
+    ...scaleVar,
   }
 
   return (

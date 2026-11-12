@@ -20,6 +20,7 @@ export interface Settings {
   pushContent: boolean
   panelMode: 'compact' | 'expanded'
   panelWidthPct: number
+  fontScale: number
 }
 
 export type Translations = Partial<Record<TargetLanguage, string>>
