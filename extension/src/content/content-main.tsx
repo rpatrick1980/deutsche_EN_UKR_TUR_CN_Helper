@@ -3,14 +3,15 @@ import { createRoot, Root } from 'react-dom/client'
 import { Panel, Card } from './Panel'
 import { PANEL_STYLES } from './panel-styles'
 import { getSelectedText, extractFromElement, validateText } from '../services/textExtraction'
-import { getSettings, saveSettings, addHistory, getHistory, clearHistory } from '../services/storage'
+import { detectLookupMode } from '../services/prompts'
+import { getSettings, saveSettings } from '../services/storage'
 import {
-  ActionType,
-  LookupResult,
-  OpenAIResponseMessage,
+  ChatResponseMessage,
+  LookupResponseMessage,
   RunActionMessage,
   Settings,
   TargetLanguage,
+  TtsResponseMessage,
   ALL_LANGUAGES,
 } from '../shared/types'
 
@@ -24,7 +25,7 @@ document.addEventListener(
   true
 )
 
-const ERROR_COPY: Record<string, string> = {
+export const ERROR_COPY: Record<string, string> = {
   NO_API_KEY:
     'No OpenAI API key set. Open Settings (gear icon) and paste your key to start.',
   INVALID_API_KEY: 'Your OpenAI API key was rejected. Please check it in Settings.',
@@ -36,10 +37,14 @@ const ERROR_COPY: Record<string, string> = {
   NO_LANG: 'No target languages are enabled. Open Settings and enable at least one language.',
 }
 
+const errorText = (code?: string) =>
+  ERROR_COPY[code ?? 'NETWORK'] || 'Something went wrong. Please try again.'
+
 class PanelController {
   private host: HTMLDivElement | null = null
   private root: Root | null = null
   private settings: Settings | null = null
+  private audio: HTMLAudioElement | null = null
 
   private state = {
     open: false,
@@ -49,8 +54,6 @@ class PanelController {
     widthPct: 25,
     widthPx: 380,
     cards: [] as Card[],
-    history: [] as LookupResult[],
-    historyOpen: true,
     resizing: false,
   }
 
@@ -62,7 +65,6 @@ class PanelController {
       Math.round((window.innerWidth * this.settings.panelWidthPct) / 100)
     )
     this.state.mode = this.settings.panelMode
-    this.state.history = await getHistory()
 
     if (this.host) return
 
@@ -85,13 +87,15 @@ class PanelController {
     return Math.max(320, Math.min(max, px))
   }
 
+  private setResizing(on: boolean) {
+    const root = this.host?.shadowRoot?.querySelector('.grh-root') as HTMLElement | null
+    root?.classList.toggle('grh-resizing', on)
+  }
+
   private startResize = (e: React.PointerEvent) => {
     e.preventDefault()
     this.state.resizing = true
-    if (this.host) {
-      const root = this.host.shadowRoot?.querySelector('.grh-root') as HTMLElement | null
-      root?.classList.add('grh-resizing')
-    }
+    this.setResizing(true)
     const prevUserSelect = document.body.style.userSelect
     document.body.style.userSelect = 'none'
     document.body.style.cursor = 'ew-resize'
@@ -106,11 +110,7 @@ class PanelController {
       document.removeEventListener('pointerup', onUp)
       document.body.style.userSelect = prevUserSelect
       document.body.style.cursor = ''
-      if (this.host) {
-        const root = this.host.shadowRoot?.querySelector('.grh-root') as HTMLElement | null
-        root?.classList.remove('grh-resizing')
-      }
-      // Persist as a percentage of the viewport.
+      this.setResizing(false)
       if (this.settings) {
         this.settings.panelWidthPct = Math.round((this.state.widthPx / window.innerWidth) * 100)
         this.state.widthPct = this.settings.panelWidthPct
@@ -125,12 +125,11 @@ class PanelController {
   private applyPushContent() {
     if (!this.settings?.pushContent) return
     document.documentElement.style.transition = 'margin-right 0.28s ease'
-    const width =
-      this.state.collapsed
-        ? '46px'
-        : this.state.mode === 'compact'
-        ? '300px'
-        : `${this.state.widthPx}px`
+    const width = this.state.collapsed
+      ? '46px'
+      : this.state.mode === 'compact'
+      ? '300px'
+      : `${this.state.widthPx}px`
     document.documentElement.style.marginRight = this.state.open ? width : ''
   }
 
@@ -140,6 +139,7 @@ class PanelController {
       this.root.render(<></>)
       if (this.host) this.host.style.display = 'none'
       document.documentElement.style.marginRight = ''
+      this.stopAudio()
       return
     }
     if (this.host) this.host.style.display = ''
@@ -151,8 +151,6 @@ class PanelController {
         mode={this.state.mode}
         width={this.state.widthPx}
         cards={this.state.cards}
-        history={this.state.history}
-        historyOpen={this.state.historyOpen}
         onClose={() => {
           this.state.open = false
           this.render()
@@ -170,25 +168,19 @@ class PanelController {
           }
           this.render()
         }}
-        onToggleHistory={() => {
-          this.state.historyOpen = !this.state.historyOpen
-          this.render()
-        }}
         onPinCard={(id) => {
           const c = this.state.cards.find((x) => x.id === id)
           if (c) c.pinned = !c.pinned
           this.render()
         }}
         onCloseCard={(id) => {
+          const c = this.state.cards.find((x) => x.id === id)
+          if (c?.speaking) this.stopAudio()
           this.state.cards = this.state.cards.filter((x) => x.id !== id)
           this.render()
         }}
-        onOpenHistory={(item) => this.openFromHistory(item)}
-        onClearHistory={async () => {
-          await clearHistory()
-          this.state.history = []
-          this.render()
-        }}
+        onSendChat={(id, text) => this.sendChat(id, text)}
+        onSpeak={(id) => this.speak(id)}
         onOpenSettings={() => chrome.runtime.sendMessage({ type: 'OPEN_OPTIONS' })}
       />
     )
@@ -199,29 +191,99 @@ class PanelController {
     return ALL_LANGUAGES.filter((l) => en?.[l])
   }
 
-  private openFromHistory(item: LookupResult) {
-    const card: Card = {
-      id: `card_${Date.now()}`,
-      action: item.action,
-      sourceText: item.sourceText,
-      languages: item.languages,
-      status: 'result',
-      translations: item.translations,
-      explanation: item.explanation,
-      pinned: false,
-      ts: item.ts,
-    }
-    this.addCard(card)
-    this.render()
-  }
-
   private addCard(card: Card) {
     // Replace the single existing unpinned live card; keep pinned cards.
+    const replaced = this.state.cards.find((c) => !c.pinned)
+    if (replaced?.speaking) this.stopAudio()
     this.state.cards = this.state.cards.filter((c) => c.pinned)
     this.state.cards.unshift(card)
   }
 
-  async run(action: ActionType, selectionText: string) {
+  private stopAudio() {
+    if (this.audio) {
+      this.audio.pause()
+      this.audio = null
+    }
+    this.state.cards.forEach((c) => (c.speaking = false))
+  }
+
+  private async speak(id: string) {
+    const card = this.state.cards.find((c) => c.id === id)
+    if (!card) return
+    if (card.speaking) {
+      this.stopAudio()
+      this.render()
+      return
+    }
+    this.stopAudio()
+
+    if (!card.audio) {
+      card.ttsStatus = 'loading'
+      card.ttsError = undefined
+      this.render()
+      const res: TtsResponseMessage = await chrome.runtime.sendMessage({
+        type: 'TTS_REQUEST',
+        text: card.sourceText,
+      })
+      if (!res?.ok || !res.audio) {
+        card.ttsStatus = 'error'
+        card.ttsError = errorText(res?.error)
+        this.render()
+        return
+      }
+      card.audio = res.audio
+    }
+    card.ttsStatus = 'idle'
+
+    const audio = new Audio(`data:audio/mpeg;base64,${card.audio}`)
+    this.audio = audio
+    card.speaking = true
+    this.render()
+    const done = () => {
+      if (this.audio === audio) this.audio = null
+      card.speaking = false
+      this.render()
+    }
+    audio.onended = done
+    audio.onerror = () => {
+      card.ttsStatus = 'error'
+      card.ttsError = 'Could not play the audio. Please try again.'
+      done()
+    }
+    audio.play().catch(() => {
+      card.ttsStatus = 'error'
+      card.ttsError = 'Playback was blocked by the browser. Click the speaker again.'
+      done()
+    })
+  }
+
+  private async sendChat(id: string, text: string) {
+    const card = this.state.cards.find((c) => c.id === id)
+    const question = text.trim()
+    if (!card || !question || card.chatStatus === 'loading') return
+
+    card.chat.push({ role: 'user', content: question })
+    card.chatStatus = 'loading'
+    this.render()
+
+    const res: ChatResponseMessage = await chrome.runtime.sendMessage({
+      type: 'CHAT_REQUEST',
+      sourceText: card.sourceText,
+      translations: card.translations,
+      entry: card.entry,
+      messages: card.chat,
+    })
+
+    if (res?.ok && res.reply) {
+      card.chat.push({ role: 'assistant', content: res.reply })
+    } else {
+      card.chat.push({ role: 'assistant', content: errorText(res?.error), error: true })
+    }
+    card.chatStatus = 'idle'
+    this.render()
+  }
+
+  async run(selectionText: string) {
     await this.ensureMounted()
     this.state.open = true
     this.state.collapsed = false
@@ -239,17 +301,20 @@ class PanelController {
 
     const card: Card = {
       id: `card_${Date.now()}`,
-      action,
+      mode: detectLookupMode(text || ''),
       sourceText: text || '(no text found)',
       languages,
       status: 'loading',
       pinned: false,
+      chat: [],
+      chatStatus: 'idle',
+      ttsStatus: 'idle',
+      speaking: false,
       ts: Date.now(),
     }
     this.addCard(card)
     this.render()
 
-    // Fallback extraction failed entirely.
     if (!text) {
       card.status = 'error'
       card.reason = fallbackReason || ERROR_COPY.NO_API_KEY
@@ -257,9 +322,9 @@ class PanelController {
       return
     }
 
-    // Local validation (German-only, length, quality).
     const valid = validateText(text)
     card.sourceText = valid.text
+    card.mode = detectLookupMode(valid.text)
     if (!valid.ok) {
       card.status = 'error'
       card.reason = valid.reason
@@ -267,7 +332,7 @@ class PanelController {
       return
     }
 
-    if (action === 'translate' && languages.length === 0) {
+    if (languages.length === 0) {
       card.status = 'error'
       card.reason = ERROR_COPY.NO_LANG
       this.render()
@@ -275,36 +340,23 @@ class PanelController {
     }
 
     // Ask background to call OpenAI (keeps key + fetch out of the page).
-    const response: OpenAIResponseMessage = await chrome.runtime.sendMessage({
-      type: 'OPENAI_REQUEST',
-      action,
+    const response: LookupResponseMessage = await chrome.runtime.sendMessage({
+      type: 'LOOKUP_REQUEST',
+      mode: card.mode,
       text: valid.text,
       languages,
     })
 
     if (!response?.ok) {
       card.status = 'error'
-      card.reason = ERROR_COPY[response?.error ?? 'NETWORK'] || 'Something went wrong. Please try again.'
+      card.reason = errorText(response?.error)
       this.render()
       return
     }
 
     card.status = 'result'
     card.translations = response.translations
-    card.explanation = response.explanation
-    this.render()
-
-    // Persist to history.
-    const entry: LookupResult = {
-      id: card.id,
-      ts: card.ts,
-      action,
-      sourceText: valid.text,
-      languages,
-      translations: response.translations,
-      explanation: response.explanation,
-    }
-    this.state.history = await addHistory(entry)
+    card.entry = response.entry
     this.render()
   }
 }
@@ -313,6 +365,6 @@ const controller = new PanelController()
 
 chrome.runtime.onMessage.addListener((message: RunActionMessage) => {
   if (message?.type === 'RUN_ACTION') {
-    controller.run(message.action, message.selectionText)
+    controller.run(message.selectionText)
   }
 })

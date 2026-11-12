@@ -1,18 +1,13 @@
-import { CONTEXT_MENU, STORAGE_KEYS, CACHE_TTL_MS } from '../shared/constants'
-import { callOpenAI } from '../services/openai'
+import { CONTEXT_MENU, CACHE_TTL_MS } from '../shared/constants'
+import { lookup, chat, speak } from '../services/openai'
 import { getCache, setCache } from '../services/storage'
-import { OpenAIRequestMessage, RunActionMessage } from '../shared/types'
+import { LookupRequestMessage, RunActionMessage } from '../shared/types'
 
 function createMenus() {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
-      id: CONTEXT_MENU.translate,
-      title: 'Translate (German → your languages)',
-      contexts: ['selection', 'page'],
-    })
-    chrome.contextMenus.create({
-      id: CONTEXT_MENU.grammar,
-      title: 'Explain Grammar',
+      id: CONTEXT_MENU.lookup,
+      title: 'Translate and Explain',
       contexts: ['selection', 'page'],
     })
   })
@@ -27,12 +22,9 @@ chrome.action.onClicked.addListener(() => {
 })
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (!tab?.id) return
-  const action =
-    info.menuItemId === CONTEXT_MENU.translate ? 'translate' : 'grammar'
+  if (!tab?.id || info.menuItemId !== CONTEXT_MENU.lookup) return
   const message: RunActionMessage = {
     type: 'RUN_ACTION',
-    action,
     selectionText: (info.selectionText ?? '').trim(),
   }
   chrome.tabs.sendMessage(tab.id, message, () => {
@@ -51,50 +43,38 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   })
 })
 
-function cacheKey(msg: OpenAIRequestMessage): string {
+function cacheKey(msg: LookupRequestMessage): string {
   const langs = msg.languages.slice().sort().join(',')
-  return `${msg.action}|${langs}|${msg.text}`
+  return `lookup|${msg.mode}|${langs}|${msg.text}`
+}
+
+async function handleLookup(message: LookupRequestMessage) {
+  const key = cacheKey(message)
+  const cache = await getCache()
+  const cached = cache[key]
+  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+    return { ok: true, translations: cached.translations, entry: cached.entry, cached: true }
+  }
+  const result = await lookup({ mode: message.mode, text: message.text, languages: message.languages })
+  if (result.ok) {
+    await setCache(key, { ts: Date.now(), translations: result.translations, entry: result.entry })
+  }
+  return result
 }
 
 chrome.runtime.onMessage.addListener((message: any, _sender, sendResponse) => {
-  if (message?.type === 'OPEN_OPTIONS') {
-    chrome.runtime.openOptionsPage()
-    return
-  }
-  if (message?.type !== 'OPENAI_REQUEST') return
-
-  ;(async () => {
-    const key = cacheKey(message)
-    const cache = await getCache()
-    const cached = cache[key]
-    if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
-      sendResponse({
-        ok: true,
-        translations: cached.translations,
-        explanation: cached.explanation,
-        cached: true,
-      })
+  switch (message?.type) {
+    case 'OPEN_OPTIONS':
+      chrome.runtime.openOptionsPage()
       return
-    }
-
-    const result = await callOpenAI({
-      action: message.action,
-      text: message.text,
-      languages: message.languages,
-    })
-
-    if (result.ok) {
-      await setCache(key, {
-        ts: Date.now(),
-        translations: result.translations,
-        explanation: result.explanation,
-      })
-    }
-    sendResponse(result)
-  })()
-
-  return true // async response
+    case 'LOOKUP_REQUEST':
+      handleLookup(message).then(sendResponse)
+      return true
+    case 'CHAT_REQUEST':
+      chat(message).then(sendResponse)
+      return true
+    case 'TTS_REQUEST':
+      speak(message.text).then(sendResponse)
+      return true
+  }
 })
-
-// Keep the key namespace referenced (avoids unused import in some build modes).
-void STORAGE_KEYS

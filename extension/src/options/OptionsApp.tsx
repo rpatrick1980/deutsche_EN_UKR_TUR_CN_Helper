@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { Settings, ALL_LANGUAGES, TargetLanguage } from '../shared/types'
-import { getSettings, saveSettings, clearHistory, clearCache } from '../services/storage'
+import { getSettings, saveSettings, clearCache } from '../services/storage'
 
 const MODEL_OPTIONS = [
   { value: 'gpt-4o-mini', label: 'gpt-4o-mini — fast & low cost (default)' },
   { value: 'gpt-4o', label: 'gpt-4o — higher quality' },
   { value: 'gpt-4.1-mini', label: 'gpt-4.1-mini' },
 ]
+
+const TTS_OPTIONS = [
+  { value: 'tts-1', label: 'Standard (tts-1) — fast, lower cost' },
+  { value: 'tts-1-hd', label: 'HD (tts-1-hd) — clearer audio' },
+] as const
 
 export function Options() {
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -98,6 +103,22 @@ export function Options() {
               ))}
             </select>
           </label>
+
+          <label className="opt-field">
+            <span>Pronunciation voice quality</span>
+            <select
+              className="opt-input"
+              value={settings.ttsModel}
+              data-testid="settings-tts-select"
+              onChange={(e) => update({ ttsModel: e.target.value as Settings['ttsModel'] })}
+            >
+              {TTS_OPTIONS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </section>
 
         <section className="opt-card">
@@ -165,30 +186,9 @@ export function Options() {
         </section>
 
         <section className="opt-card">
-          <h2>History & cache</h2>
-          <label className="opt-field">
-            <span>Auto-expire history after {settings.historyAutoExpireDays} days</span>
-            <input
-              type="range"
-              min={1}
-              max={90}
-              value={settings.historyAutoExpireDays}
-              data-testid="settings-expire-range"
-              onChange={(e) => update({ historyAutoExpireDays: Number(e.target.value) })}
-            />
-          </label>
+          <h2>Cache</h2>
+          <p className="opt-hint">Recent results are cached on this device for 7 days to save API calls.</p>
           <div className="opt-btnrow">
-            <button
-              className="opt-btn ghost"
-              data-testid="settings-clear-history"
-              onClick={async () => {
-                await clearHistory()
-                setCleared('History cleared.')
-                setTimeout(() => setCleared(''), 2000)
-              }}
-            >
-              Clear history
-            </button>
             <button
               className="opt-btn ghost"
               data-testid="settings-clear-cache"
@@ -213,8 +213,8 @@ export function Options() {
 
         <p className="opt-privacy">
           Privacy: selected German text is sent to the OpenAI API only when you choose
-          Translate or Explain Grammar. Nothing is read automatically and no data is sent
-          to any other server. History and cache stay on this device.
+          Translate and Explain, ask a follow-up question, or play the pronunciation. Nothing is read
+          automatically and no data is sent to any other server. Settings and cache stay on this device.
         </p>
       </main>
     </div>

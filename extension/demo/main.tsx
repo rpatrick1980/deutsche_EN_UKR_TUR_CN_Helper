@@ -2,15 +2,13 @@ import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Panel, Card } from '../src/content/Panel'
 import { PANEL_STYLES } from '../src/content/panel-styles'
-import { LookupResult } from '../src/shared/types'
+import { ChatMessage } from '../src/shared/types'
 
+// Variants: ?v=word | text | paragraph | dark | compact | loading | error
 const params = new URLSearchParams(location.search)
 const v = params.get('v') || ''
 const initialTheme = v === 'dark' ? 'dark' : 'light'
 const initialMode = v === 'compact' ? 'compact' : 'expanded'
-const grammarOnly = v === 'grammar'
-const longText = v === 'long'
-const paragraph = v === 'paragraph'
 
 const host = document.createElement('div')
 const shadow = host.attachShadow({ mode: 'open' })
@@ -21,96 +19,101 @@ const mount = document.createElement('div')
 shadow.appendChild(mount)
 document.body.appendChild(host)
 
-const translateCard: Card = {
-  id: 'c1',
-  action: 'translate',
-  sourceText: 'Der Rhein ist einer der längsten Flüsse Europas.',
-  languages: ['English', 'Ukrainian', 'Turkish', 'Chinese'],
-  status: 'result',
-  pinned: true,
+const base = {
+  languages: ['English', 'Ukrainian', 'Turkish'] as Card['languages'],
+  status: 'result' as const,
+  pinned: false,
+  chat: [] as ChatMessage[],
+  chatStatus: 'idle' as const,
+  ttsStatus: 'idle' as const,
+  speaking: false,
   ts: Date.now(),
-  translations: {
-    English: 'The Rhine is one of the longest rivers in Europe.',
-    Ukrainian: 'Рейн — одна з найдовших річок Європи.',
-    Turkish: 'Ren, Avrupa’nın en uzun nehirlerinden biridir.',
-    Chinese: '萊茵河是歐洲最長的河流之一。',
+}
+
+const wordCard: Card = {
+  ...base,
+  id: 'w1',
+  mode: 'word',
+  sourceText: 'Fürsten',
+  translations: { English: 'princes', Ukrainian: 'князі', Turkish: 'prensler' },
+  entry: {
+    lemma: 'der Fürst',
+    wordType: 'Nomen',
+    article: 'der',
+    plural: 'die Fürsten',
+    inflection: 'schwach',
+    forms: 'des Fürsten',
+    notes: [
+      'Bedeutung: ein adliger Herrscher über ein Gebiet (Fürstentum).',
+      'Schwache Deklination (n-Deklination): alle Formen außer Nominativ Singular enden auf -en.',
+      '„Fürsten" = hier Nominativ Plural (Subjekt des Satzes).',
+    ],
+    examples: [
+      'Der Fürst regierte das kleine Land viele Jahre.',
+      'Im Mittelalter hatten die Fürsten viel Macht.',
+      'Das Schloss gehörte einem reichen Fürsten.',
+    ],
   },
 }
 
-const grammarCard: Card = {
-  id: 'c2',
-  action: 'grammar',
-  sourceText: 'kontrollierten zahlreiche Fürsten den Handel',
-  languages: [],
-  status: 'result',
-  pinned: false,
-  ts: Date.now(),
-  explanation:
-    '- „kontrollierten" = Verb, 3. Person Plural, Präteritum (einfache Vergangenheit)\n- Infinitiv: kontrollieren; schwaches Verb, Stamm + -ten\n- Aktiv, Indikativ\n- „zahlreiche Fürsten" = Subjekt (Nominativ, Plural)\n- „den Handel" = Akkusativobjekt (maskulin, Singular)',
-}
-
-const longTranslateCard: Card = {
-  id: 'cl',
-  action: 'translate',
-  sourceText:
-    'Im Mittelalter kontrollierten zahlreiche Fürsten den Handel entlang des Flusses und erhoben Zölle von den Kaufleuten, was den Warenverkehr erheblich verteuerte.',
-  languages: ['English', 'Ukrainian', 'Turkish', 'Chinese'],
-  status: 'result',
-  pinned: false,
-  ts: Date.now(),
+const textCard: Card = {
+  ...base,
+  id: 't1',
+  mode: 'text',
+  sourceText: 'Im Mittelalter kontrollierten zahlreiche Fürsten den Handel entlang des Flusses.',
   translations: {
-    English:
-      'In the Middle Ages, numerous princes controlled trade along the river and levied tolls on the merchants, which considerably increased the cost of moving goods and slowed commerce throughout the whole region.',
-    Ukrainian:
-      'У середні віки численні князі контролювали торгівлю вздовж річки та стягували мита з купців, що значно підвищувало вартість перевезення товарів і сповільнювало торгівлю в усьому регіоні протягом століть.',
-    Turkish:
-      'Orta Çağ’da çok sayıda prens nehir boyunca ticareti kontrol ediyor ve tüccarlardan geçiş vergisi alıyordu; bu da malların taşınma maliyetini önemli ölçüde artırıyor ve tüm bölgede ticareti yavaşlatıyordu.',
-    Chinese:
-      '在中世紀，眾多諸侯控制著沿河的貿易，並向商人徵收通行稅，這大大提高了貨物運輸的成本，並使整個地區的商業活動長期放緩。',
+    English: 'In the Middle Ages, numerous princes controlled trade along the river.',
+    Ukrainian: 'У середні віки численні князі контролювали торгівлю вздовж річки.',
+    Turkish: 'Orta Çağ’da çok sayıda prens nehir boyunca ticareti kontrol ediyordu.',
   },
+  chat: [
+    { role: 'user', content: 'Why is it "des Flusses"?' },
+    {
+      role: 'assistant',
+      content:
+        '„Des Flusses" ist Genitiv Singular.\n- Die Präposition „entlang" steht hier mit Genitiv.\n- „der Fluss" → Genitiv: „des Flusses" (starkes Nomen, Endung -es).',
+    },
+  ],
 }
 
 const repeat = (s: string, n: number) => Array.from({ length: n }, () => s).join(' ')
 const paragraphCard: Card = {
-  ...longTranslateCard,
-  id: 'cp',
-  sourceText: repeat(longTranslateCard.sourceText, 4),
+  ...textCard,
+  id: 'p1',
+  chat: [],
+  sourceText: repeat(textCard.sourceText, 4),
   translations: {
-    English: repeat(longTranslateCard.translations!.English!, 5),
-    Ukrainian: repeat(longTranslateCard.translations!.Ukrainian!, 5),
-    Turkish: repeat(longTranslateCard.translations!.Turkish!, 5),
-    Chinese: repeat(longTranslateCard.translations!.Chinese!, 5),
+    English: repeat(textCard.translations!.English!, 6),
+    Ukrainian: repeat(textCard.translations!.Ukrainian!, 6),
+    Turkish: repeat(textCard.translations!.Turkish!, 6),
   },
 }
 
-const cards: Card[] = paragraph
-  ? [paragraphCard]
-  : longText
-  ? [longTranslateCard]
-  : grammarOnly
-  ? [grammarCard]
-  : [translateCard, grammarCard]
+const loadingCard: Card = { ...base, id: 'l1', mode: 'text', status: 'loading', sourceText: 'Viele Städte wurden an seinen Ufern gegründet.' }
+const errorCard: Card = {
+  ...base,
+  id: 'e1',
+  mode: 'text',
+  status: 'error',
+  sourceText: 'Viele Städte wurden an seinen Ufern gegründet.',
+  reason: 'No OpenAI API key set. Open Settings (gear icon) and paste your key to start.',
+}
 
-const baseHistory: LookupResult[] = [
-  { id: 'h1', ts: Date.now() - 86400000, action: 'translate', sourceText: 'Viele Städte wurden an seinen Ufern gegründet.', languages: ['English'] },
-  { id: 'h2', ts: Date.now() - 2 * 86400000, action: 'grammar', sourceText: 'erhoben', languages: [] },
-]
-const history: LookupResult[] = paragraph
-  ? Array.from({ length: 14 }, (_, i) => ({
-      ...baseHistory[i % 2],
-      id: `h${i}`,
-      ts: Date.now() - i * 86400000,
-      sourceText: `${i + 1}. ${baseHistory[i % 2].sourceText}`,
-    }))
-  : baseHistory
+const initialCards: Card[] =
+  v === 'word' ? [wordCard]
+  : v === 'text' ? [textCard]
+  : v === 'paragraph' ? [paragraphCard]
+  : v === 'loading' ? [loadingCard]
+  : v === 'error' ? [errorCard]
+  : [wordCard, { ...textCard, pinned: true }]
 
 const noop = () => {}
 
 function Demo() {
   const [mode, setMode] = useState<'compact' | 'expanded'>(initialMode)
-  const [historyOpen, setHistoryOpen] = useState(true)
   const [collapsed, setCollapsed] = useState(false)
   const [width, setWidth] = useState(Math.round(window.innerWidth * 0.26))
+  const [cards, setCards] = useState<Card[]>(initialCards)
 
   const clamp = (px: number) => Math.max(320, Math.min(Math.min(760, window.innerWidth * 0.8), px))
 
@@ -125,6 +128,25 @@ function Demo() {
     document.addEventListener('pointerup', onUp)
   }
 
+  const patch = (id: string, fn: (c: Card) => Card) =>
+    setCards((cs) => cs.map((c) => (c.id === id ? fn(c) : c)))
+
+  // Mocked chat: echoes a German reply after a short delay.
+  const onSendChat = (id: string, text: string) => {
+    patch(id, (c) => ({ ...c, chat: [...c.chat, { role: 'user', content: text }], chatStatus: 'loading' }))
+    setTimeout(() => {
+      patch(id, (c) => ({
+        ...c,
+        chatStatus: 'idle',
+        chat: [...c.chat, { role: 'assistant', content: `Gute Frage! (Demo-Antwort auf: „${text}")` }],
+      }))
+    }, 600)
+  }
+
+  // Mocked speak: toggles the playing state.
+  const onSpeak = (id: string) =>
+    patch(id, (c) => ({ ...c, speaking: !c.speaking }))
+
   return (
     <Panel
       theme={initialTheme}
@@ -132,17 +154,14 @@ function Demo() {
       mode={mode}
       width={width}
       cards={cards}
-      history={history}
-      historyOpen={historyOpen}
       onClose={noop}
       onToggleCollapse={() => setCollapsed((c) => !c)}
       onToggleMode={() => setMode((m) => (m === 'compact' ? 'expanded' : 'compact'))}
       onResizeStart={onResizeStart}
-      onToggleHistory={() => setHistoryOpen((v) => !v)}
-      onPinCard={noop}
-      onCloseCard={noop}
-      onOpenHistory={noop}
-      onClearHistory={noop}
+      onPinCard={(id) => patch(id, (c) => ({ ...c, pinned: !c.pinned }))}
+      onCloseCard={(id) => setCards((cs) => cs.filter((c) => c.id !== id))}
+      onSendChat={onSendChat}
+      onSpeak={onSpeak}
       onOpenSettings={noop}
     />
   )

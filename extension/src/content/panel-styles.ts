@@ -148,19 +148,15 @@ export const PANEL_STYLES = `
 
 /* Always-visible custom scrollbars (macOS overlay scrollbars hide otherwise). */
 .grh-body::-webkit-scrollbar,
-.grh-hist-list::-webkit-scrollbar,
 .grh-source::-webkit-scrollbar { width: 10px; height: 10px; }
 .grh-body::-webkit-scrollbar-track,
-.grh-hist-list::-webkit-scrollbar-track,
 .grh-source::-webkit-scrollbar-track { background: var(--grh-surface-2); border-radius: 8px; }
 .grh-body::-webkit-scrollbar-thumb,
-.grh-hist-list::-webkit-scrollbar-thumb,
 .grh-source::-webkit-scrollbar-thumb {
   background: var(--grh-muted); border-radius: 8px;
   border: 2px solid var(--grh-surface-2); background-clip: padding-box;
 }
 .grh-body::-webkit-scrollbar-thumb:hover,
-.grh-hist-list::-webkit-scrollbar-thumb:hover,
 .grh-source::-webkit-scrollbar-thumb:hover { background: var(--grh-accent); background-clip: padding-box; }
 .grh-source::-webkit-scrollbar { width: 6px; }
 
@@ -222,29 +218,62 @@ export const PANEL_STYLES = `
 .grh-empty { color: var(--grh-muted); font-size: 14px; text-align: center; padding: 40px 16px; line-height: 1.6; }
 .grh-empty .grh-emoji { font-size: 30px; display:block; margin-bottom: 10px; }
 
-.grh-history { flex: 0 0 auto; border-top: 1px solid var(--grh-border); }
-.grh-hist-head {
-  display: flex; align-items: center; gap: 8px; padding: 11px 14px;
-  font-family: sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.4px;
-  text-transform: uppercase; color: var(--grh-muted); cursor: pointer; user-select: none;
-}
-.grh-hist-list { padding: 0 10px 12px; display: flex; flex-direction: column; gap: 6px; max-height: 30vh; overflow-y: auto; overscroll-behavior: contain; }
-.grh-hist-list > * { flex: 0 0 auto; }
 .grh-body { overscroll-behavior: contain; }
-.grh-hist-item {
-  text-align: left; border: 1px solid var(--grh-border); background: var(--grh-surface);
-  border-radius: 9px; padding: 8px 10px; cursor: pointer; font-family: inherit;
-  color: var(--grh-text); transition: border-color 0.15s ease, background 0.15s ease;
-}
-.grh-hist-item:hover { border-color: var(--grh-accent); background: var(--grh-surface-2); }
-.grh-hist-meta { font-family: sans-serif; font-size: 10px; letter-spacing: 0.3px; text-transform: uppercase; color: var(--grh-muted); margin-bottom: 2px; }
-.grh-hist-text { font-size: 13px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.grh-linkbtn {
-  font-family: sans-serif; background: none; border: none; color: var(--grh-accent);
-  cursor: pointer; font-size: 11.5px; font-weight: 600; padding: 2px 4px;
+/* Dictionary entry (word mode) */
+.grh-dict {
+  margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--grh-border);
 }
-.grh-linkbtn:hover { text-decoration: underline; }
+.grh-dict-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.grh-dict-lemma { font-size: 19px; font-weight: 700; color: var(--grh-text); }
+.grh-dict-meta {
+  font-family: sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+  text-transform: uppercase; color: var(--grh-accent-2);
+}
+.grh-dict-facts {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0 0 10px;
+  font-size: 13.5px; line-height: 1.45;
+}
+.grh-dict-facts dt { font-family: sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; color: var(--grh-muted); padding-top: 2px; }
+.grh-dict-facts dd { margin: 0; }
+.grh-dict-notes { margin: 0 0 10px; padding-left: 18px; font-size: 14px; line-height: 1.55; }
+.grh-dict-notes li { margin-bottom: 4px; }
+.grh-dict-examples ol { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.55; }
+.grh-dict-examples li { margin-bottom: 5px; }
+
+/* Follow-up chat */
+.grh-chat { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--grh-border); }
+.grh-chat-log { display: flex; flex-direction: column; gap: 7px; margin: 6px 0 10px; }
+.grh-msg {
+  max-width: 92%; padding: 8px 11px; border-radius: 12px; font-size: 13.5px; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word; animation: grh-in 0.2s ease;
+}
+.grh-msg-user { align-self: flex-end; background: var(--grh-accent); color: #fff; border-bottom-right-radius: 4px; }
+.grh-msg-assistant { align-self: flex-start; background: var(--grh-surface-2); border: 1px solid var(--grh-border); border-bottom-left-radius: 4px; }
+.grh-msg-error { border-color: rgba(214, 69, 69, 0.45); color: var(--grh-danger); }
+.grh-msg-typing { display: flex; align-items: center; gap: 8px; color: var(--grh-muted); font-family: sans-serif; font-size: 12.5px; }
+.grh-chat-row { display: flex; gap: 6px; margin-top: 6px; }
+.grh-chat-input {
+  flex: 1; min-width: 0; font-family: inherit; font-size: 13.5px; color: var(--grh-text);
+  background: var(--grh-bg); border: 1px solid var(--grh-border); border-radius: 10px; padding: 8px 11px;
+  outline: none; transition: border-color 0.15s ease;
+}
+.grh-chat-input:focus { border-color: var(--grh-accent); }
+.grh-chat-input:disabled { opacity: 0.6; }
+.grh-chat-send {
+  width: 36px; height: 36px; flex: 0 0 auto; border-radius: 10px; border: none; cursor: pointer;
+  background: var(--grh-accent); color: #fff; font-size: 14px; font-family: sans-serif;
+  display: flex; align-items: center; justify-content: center; transition: opacity 0.15s ease, transform 0.1s ease;
+}
+.grh-chat-send:hover { opacity: 0.9; }
+.grh-chat-send:active { transform: scale(0.94); }
+.grh-chat-send:disabled { opacity: 0.4; cursor: default; }
+
+/* Pronunciation */
+.grh-iconbtn.grh-active { background: var(--grh-accent); color: #fff; border-color: var(--grh-accent); }
+.grh-iconbtn:disabled { cursor: default; opacity: 0.7; }
+.grh-spinner-sm { width: 14px; height: 14px; border-width: 2px; }
+.grh-tts-error { font-family: sans-serif; font-size: 12px; color: var(--grh-danger); margin: -4px 0 10px; }
 
 .grh-tab { transform: rotate(180deg); writing-mode: vertical-rl; }
 
@@ -260,6 +289,7 @@ export const PANEL_STYLES = `
 .grh-root.grh-compact .grh-lang-label { font-size: 10px; }
 .grh-root.grh-compact .grh-explain { font-size: 12.8px; line-height: 1.5; }
 .grh-root.grh-compact .grh-explain ul { padding-left: 15px; }
-.grh-root.grh-compact .grh-hist-head { padding: 9px 11px; font-size: 11px; }
-.grh-root.grh-compact .grh-hist-text { font-size: 12px; }
+.grh-root.grh-compact .grh-dict-lemma { font-size: 16px; }
+.grh-root.grh-compact .grh-dict-notes, .grh-root.grh-compact .grh-dict-examples ol { font-size: 12.8px; }
+.grh-root.grh-compact .grh-msg { font-size: 12.5px; }
 `

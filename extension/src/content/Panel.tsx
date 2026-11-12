@@ -1,15 +1,21 @@
-import React from 'react'
-import { ActionType, LookupResult, TargetLanguage } from '../shared/types'
+import React, { useState } from 'react'
+import { ChatMessage, DictionaryEntry, LookupMode, TargetLanguage, Translations } from '../shared/types'
 
 export interface Card {
   id: string
-  action: ActionType
+  mode: LookupMode
   sourceText: string
   languages: TargetLanguage[]
   status: 'loading' | 'error' | 'result'
   reason?: string
-  translations?: Partial<Record<TargetLanguage, string>>
-  explanation?: string
+  translations?: Translations
+  entry?: DictionaryEntry
+  chat: ChatMessage[]
+  chatStatus: 'idle' | 'loading'
+  ttsStatus: 'idle' | 'loading' | 'error'
+  ttsError?: string
+  audio?: string
+  speaking: boolean
   pinned: boolean
   ts: number
 }
@@ -20,17 +26,14 @@ export interface PanelProps {
   mode: 'compact' | 'expanded'
   width: number
   cards: Card[]
-  history: LookupResult[]
-  historyOpen: boolean
   onClose: () => void
   onToggleCollapse: () => void
   onToggleMode: () => void
   onResizeStart: (e: React.PointerEvent) => void
-  onToggleHistory: () => void
   onPinCard: (id: string) => void
   onCloseCard: (id: string) => void
-  onOpenHistory: (item: LookupResult) => void
-  onClearHistory: () => void
+  onSendChat: (id: string, text: string) => void
+  onSpeak: (id: string) => void
   onOpenSettings: () => void
 }
 
@@ -43,19 +46,133 @@ function ErrorBlock({ reason }: { reason?: string }) {
   )
 }
 
-function ExplanationView({ text }: { text: string }) {
-  const lines = text
-    .split('\n')
-    .map((l) => l.replace(/^\s*[-•]\s?/, '').trim())
-    .filter(Boolean)
+function TranslationsView({ card }: { card: Card }) {
   return (
-    <div className="grh-explain" data-testid="grammar-explanation">
-      <ul>
-        {lines.map((l, i) => (
-          <li key={i}>{l}</li>
-        ))}
-      </ul>
+    <div data-testid="translation-result">
+      {card.languages.map((lang) => (
+        <div className="grh-lang-row" key={lang}>
+          <div className="grh-lang-label">{lang}</div>
+          <div className="grh-lang-text">{card.translations?.[lang] ?? '—'}</div>
+        </div>
+      ))}
     </div>
+  )
+}
+
+function DictionaryView({ entry }: { entry: DictionaryEntry }) {
+  const meta = [entry.wordType, entry.inflection].filter(Boolean).join(' · ')
+  const facts: [string, string | null | undefined][] = [
+    ['Artikel', entry.article],
+    ['Plural', entry.plural],
+    ['Formen', entry.forms],
+  ]
+  return (
+    <div className="grh-dict" data-testid="dictionary-entry">
+      <div className="grh-dict-head">
+        <span className="grh-dict-lemma" data-testid="dictionary-lemma">{entry.lemma}</span>
+        {meta && <span className="grh-dict-meta">{meta}</span>}
+      </div>
+      <dl className="grh-dict-facts">
+        {facts
+          .filter(([, v]) => v)
+          .map(([k, v]) => (
+            <React.Fragment key={k}>
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </React.Fragment>
+          ))}
+      </dl>
+      {entry.notes.length > 0 && (
+        <ul className="grh-dict-notes" data-testid="dictionary-notes">
+          {entry.notes.map((n, i) => (
+            <li key={i}>{n}</li>
+          ))}
+        </ul>
+      )}
+      {entry.examples.length > 0 && (
+        <div className="grh-dict-examples" data-testid="dictionary-examples">
+          <div className="grh-lang-label">Beispiele</div>
+          <ol>
+            {entry.examples.map((e, i) => (
+              <li key={i}>{e}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ChatBox({ card, onSend }: { card: Card; onSend: (text: string) => void }) {
+  const [draft, setDraft] = useState('')
+  const busy = card.chatStatus === 'loading'
+  const submit = () => {
+    if (!draft.trim() || busy) return
+    onSend(draft)
+    setDraft('')
+  }
+  return (
+    <div className="grh-chat" data-testid="chat-box">
+      <div className="grh-lang-label">Nachfragen</div>
+      {card.chat.length > 0 && (
+        <div className="grh-chat-log" data-testid="chat-log">
+          {card.chat.map((m, i) => (
+            <div
+              key={i}
+              className={`grh-msg grh-msg-${m.role}${m.error ? ' grh-msg-error' : ''}`}
+              data-testid={`chat-message-${m.role}`}
+            >
+              {m.content}
+            </div>
+          ))}
+          {busy && (
+            <div className="grh-msg grh-msg-assistant grh-msg-typing" data-testid="chat-typing">
+              <span className="grh-spinner" /> Denkt nach…
+            </div>
+          )}
+        </div>
+      )}
+      <div className="grh-chat-row">
+        <input
+          className="grh-chat-input"
+          placeholder="Frag die KI zu diesem Text…"
+          value={draft}
+          disabled={busy}
+          data-testid="chat-input"
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              submit()
+            }
+          }}
+        />
+        <button
+          className="grh-chat-send"
+          title="Send"
+          disabled={busy || !draft.trim()}
+          data-testid="chat-send-button"
+          onClick={submit}
+        >
+          ➤
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function SpeakButton({ card, onSpeak }: { card: Card; onSpeak: () => void }) {
+  const loading = card.ttsStatus === 'loading'
+  return (
+    <button
+      className={`grh-iconbtn${card.speaking ? ' grh-active' : ''}`}
+      title={card.speaking ? 'Stop' : 'Play pronunciation'}
+      data-testid="card-speak-button"
+      disabled={loading}
+      onClick={onSpeak}
+    >
+      {loading ? <span className="grh-spinner grh-spinner-sm" /> : card.speaking ? '■' : '🔊'}
+    </button>
   )
 }
 
@@ -63,18 +180,24 @@ function CardView({
   card,
   onPin,
   onClose,
+  onSendChat,
+  onSpeak,
 }: {
   card: Card
   onPin: (id: string) => void
   onClose: (id: string) => void
+  onSendChat: (id: string, text: string) => void
+  onSpeak: (id: string) => void
 }) {
+  const ready = card.status === 'result'
   return (
-    <div className="grh-card" data-testid={`card-${card.action}`}>
+    <div className="grh-card" data-testid={`card-${card.mode}`}>
       <div className="grh-card-head">
-        <span className={`grh-pill ${card.action === 'grammar' ? 'grh-grammar' : ''}`}>
-          {card.action === 'translate' ? 'Translate' : 'Grammar'}
+        <span className={`grh-pill ${card.mode === 'word' ? 'grh-grammar' : ''}`}>
+          {card.mode === 'word' ? 'Wort' : 'Text'}
         </span>
         <span className="grh-spacer" />
+        {ready && <SpeakButton card={card} onSpeak={() => onSpeak(card.id)} />}
         <button
           className="grh-iconbtn"
           title={card.pinned ? 'Unpin' : 'Pin this result'}
@@ -96,48 +219,29 @@ function CardView({
         <div className="grh-source" title={card.sourceText}>
           {card.sourceText}
         </div>
+        {card.ttsError && (
+          <div className="grh-tts-error" data-testid="tts-error">{card.ttsError}</div>
+        )}
 
         {card.status === 'loading' && (
           <div className="grh-loading" data-testid="panel-loading">
             <span className="grh-spinner" />
-            {card.action === 'translate' ? 'Translating…' : 'Analysing grammar…'}
+            Translating & explaining…
           </div>
         )}
 
         {card.status === 'error' && <ErrorBlock reason={card.reason} />}
 
-        {card.status === 'result' && card.action === 'translate' && (
-          <div data-testid="translation-result">
-            {card.languages.map((lang) => (
-              <div className="grh-lang-row" key={lang}>
-                <div className="grh-lang-label">{lang}</div>
-                <div className="grh-lang-text">
-                  {card.translations?.[lang] ?? '—'}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {card.status === 'result' && card.action === 'grammar' && (
-          <ExplanationView text={card.explanation ?? ''} />
-        )}
+        {ready && <TranslationsView card={card} />}
+        {ready && card.entry && <DictionaryView entry={card.entry} />}
+        {ready && <ChatBox card={card} onSend={(t) => onSendChat(card.id, t)} />}
       </div>
     </div>
   )
 }
 
 export function Panel(props: PanelProps) {
-  const {
-    theme,
-    collapsed,
-    mode,
-    width,
-    cards,
-    history,
-    historyOpen,
-  } = props
-
+  const { theme, collapsed, mode, width, cards } = props
   const compact = mode === 'compact'
 
   if (collapsed) {
@@ -223,7 +327,7 @@ export function Panel(props: PanelProps) {
           <div className="grh-empty" data-testid="panel-empty">
             <span className="grh-emoji">📖</span>
             Select German text on the page, then right-click and choose
-            <b> Translate</b> or <b> Explain Grammar</b>.
+            <b> Translate and Explain</b>.
           </div>
         ) : (
           cards.map((c) => (
@@ -232,51 +336,10 @@ export function Panel(props: PanelProps) {
               card={c}
               onPin={props.onPinCard}
               onClose={props.onCloseCard}
+              onSendChat={props.onSendChat}
+              onSpeak={props.onSpeak}
             />
           ))
-        )}
-      </div>
-
-      <div className="grh-history" data-testid="panel-history">
-        <div className="grh-hist-head" onClick={props.onToggleHistory} data-testid="history-toggle">
-          <span>{historyOpen ? '▾' : '▸'}</span>
-          <span>Recent ({history.length})</span>
-          <span className="grh-spacer" />
-          {history.length > 0 && (
-            <button
-              className="grh-linkbtn"
-              data-testid="history-clear-button"
-              onClick={(e) => {
-                e.stopPropagation()
-                props.onClearHistory()
-              }}
-            >
-              Clear
-            </button>
-          )}
-        </div>
-        {historyOpen && (
-          <div className="grh-hist-list">
-            {history.length === 0 && (
-              <div className="grh-empty" style={{ padding: '14px' }}>
-                No lookups yet.
-              </div>
-            )}
-            {history.map((h) => (
-              <button
-                key={h.id}
-                className="grh-hist-item"
-                data-testid="history-item"
-                onClick={() => props.onOpenHistory(h)}
-              >
-                <div className="grh-hist-meta">
-                  {h.action === 'translate' ? 'Translate' : 'Grammar'} ·{' '}
-                  {new Date(h.ts).toLocaleDateString()}
-                </div>
-                <div className="grh-hist-text">{h.sourceText}</div>
-              </button>
-            ))}
-          </div>
         )}
       </div>
     </div>

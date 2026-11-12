@@ -9,9 +9,12 @@
 ## 1. What this is
 
 A **Manifest V3 Chrome extension** (desktop Chrome) for adult German learners.
-Select German text on any page → right-click → **Translate** (English / Ukrainian /
-Turkish / Traditional Chinese-Taiwan) or **Explain Grammar** → results appear in a
-**fixed right-side panel** injected into the page. History + cache are local.
+Select German text on any page → right-click → **Translate and Explain** → results appear
+in a **fixed right-side panel** injected into the page: translations (English / Ukrainian /
+Turkish), and for a single word (≤2 words, e.g. "der Hund") a German dictionary-style entry
+(Artikel, Plural, stark/schwach, Formen, notes, 3 example sentences). Every result card has a
+**follow-up chat** (answers always in German) and a **🔊 pronunciation** button (OpenAI TTS).
+Cache is local; there is no history UI.
 
 - **Stack:** React 18 + TypeScript, Vite 5, `@crxjs/vite-plugin` (MV3 wiring).
 - **No backend, no database** in v1. OpenAI is called **directly** from the
@@ -38,7 +41,7 @@ extension/
       service-worker.ts       # context menus; OpenAI call (cache-first); open options
     content/
       content-main.tsx        # THE ORCHESTRATOR: injects shadow-DOM panel, runs a lookup
-      Panel.tsx               # Panel UI (pure-ish component): states, cards, history, resize
+      Panel.tsx               # Panel UI: cards (translations, DictionaryView, ChatBox, SpeakButton), resize
       panel-styles.ts         # all panel CSS as a string (injected into the shadow root)
     options/
       options.html            # options entry (CRXJS treats HTML as an entry)
@@ -47,16 +50,16 @@ extension/
       options.css
     services/
       openai.ts               # AI SERVICE LAYER (swap here for a proxy) — runs in SW
-      prompts.ts              # translation + grammar prompt builders (JSON output)
+      prompts.ts              # detectLookupMode, lookup (JSON) + chat prompt builders
       textExtraction.ts       # selection/element capture + validation (German/length/noise)
       germanDetect.ts         # heuristic German detector
-      storage.ts              # chrome.storage.local helpers: settings/history/cache
+      storage.ts              # chrome.storage.local helpers: settings/cache
     shared/
       types.ts                # all shared TS types + ALL_LANGUAGES
       constants.ts            # DEFAULT_SETTINGS, STORAGE_KEYS, MAX_WORDS, TTLs, menu ids
 
   demo/                       # NOT shipped. Renders the REAL Panel/Options for screenshots + QA
-    index.html + main.tsx     # article page + panel, variants via ?v=grammar|compact|dark
+    index.html + main.tsx     # article page + panel, variants via ?v=word|text|paragraph|loading|error|compact|dark
     settings.html + settings.tsx  # stubs chrome.storage so Options renders in a plain browser
   test/
     logic.test.ts             # pure-logic unit tests (germanDetect, validateText, prompt)
@@ -84,7 +87,7 @@ Load in Chrome: `chrome://extensions` → Developer mode → **Load unpacked** �
 cd extension
 npx vite build --config vite.demo.config.ts   # outputs to ../frontend/public/grh-demo
 ```
-Served at `/grh-demo/index.html` (`?v=grammar|compact|dark`) and `/grh-demo/settings.html`.
+Served at `/grh-demo/index.html` (`?v=word|text|paragraph|loading|error|compact|dark`) and `/grh-demo/settings.html`.
 This is how the UI is verified without loading the extension (see §8).
 
 ---
@@ -96,25 +99,33 @@ User right-clicks selection
         │
         ▼
 background/service-worker.ts
-  contextMenus.onClicked ──► chrome.tabs.sendMessage(tab, {RUN_ACTION, action, selectionText})
+  contextMenus.onClicked ──► chrome.tabs.sendMessage(tab, {RUN_ACTION, selectionText})
         │ (if no content script: scripting.executeScript shows a "reload page" alert)
         ▼
 content/content-main.tsx  (PanelController)
   1. resolve text:  selectionText → window.getSelection() → extractFromElement(lastRightClicked)
   2. validateText(): German-only + ≤700 words + noise/quality  (services/textExtraction.ts)
-  3. mount shadow-DOM panel, render loading card
-  4. chrome.runtime.sendMessage({OPENAI_REQUEST, action, text, languages})
+  3. mode = detectLookupMode(text): 'word' (≤2 words, no sentence punctuation) | 'text'
+  4. mount shadow-DOM panel, render loading card
+  5. chrome.runtime.sendMessage({LOOKUP_REQUEST, mode, text, languages})
         │
         ▼
-background/service-worker.ts  onMessage(OPENAI_REQUEST)
-  - cache-first (getCache, 7-day TTL, key = action|langs|text)
-  - callOpenAI()  (services/openai.ts)  → POST api.openai.com/v1/chat/completions
+background/service-worker.ts  onMessage(LOOKUP_REQUEST)
+  - cache-first (getCache, 7-day TTL, key = lookup|mode|langs|text)
+  - lookup()  (services/openai.ts)  → POST api.openai.com/v1/chat/completions
       * model + apiKey from settings; response_format: json_object
-      * translate → {translations:{Lang:...}} ; grammar → {explanation:"- ..."}
+      * {translations:{Lang:...}} and, in word mode, entry:{lemma,wordType,article,plural,
+        inflection,forms,notes[],examples[3]} (all German)
       * NOT_GERMAN / NO_API_KEY / RATE_LIMIT / TIMEOUT / NETWORK error codes
   - store cache; sendResponse(result)
         ▼
-content-main renders result card, then addHistory() (services/storage.ts)
+content-main renders result card (TranslationsView + DictionaryView + ChatBox)
+
+Follow-up chat:  content {CHAT_REQUEST, sourceText, translations, entry, messages[]}
+                 → chat() → chat/completions (system prompt: German tutor, ALWAYS answers in German)
+Pronunciation:   content {TTS_REQUEST, text} → speak() → POST /v1/audio/speech
+                 (model settings.ttsModel 'tts-1'|'tts-1-hd', voice 'alloy', mp3)
+                 → base64 → content plays `new Audio('data:audio/mpeg;base64,…')`; cached per card
 ```
 
 Key detail: **the OpenAI fetch runs in the service worker**, not the page. This
@@ -130,7 +141,7 @@ Content ↔ background talk via `chrome.runtime` messages typed in `shared/types
 - `PanelController` (in `content-main.tsx`) holds imperative state and calls
   `root.render(<Panel .../>)` on every change. **State is NOT React state** — it's a
   plain object on the controller; React only renders. Keep this pattern.
-- **States:** empty · loading · error · result · history. Cards are an array;
+- **States:** empty · loading · error · result. Cards are an array;
   the single unpinned "live" card is replaced on each new lookup; **pinned** cards persist.
 - **Modes:** `compact` (fixed ~300px, brand name + source quotes hidden, no resize handle)
   vs `expanded` (resizable). Toggle persists to `settings.panelMode`.
@@ -149,13 +160,12 @@ Content ↔ background talk via `chrome.runtime` messages typed in `shared/types
 ```ts
 apiKey: string
 model: string                       // default 'gpt-4o-mini' (see MODEL_OPTIONS in OptionsApp)
-enabledLanguages: Record<TargetLanguage, boolean>  // English/Ukrainian/Turkish/Chinese
+ttsModel: 'tts-1' | 'tts-1-hd'      // pronunciation quality (Settings → OpenAI section)
+enabledLanguages: Record<TargetLanguage, boolean>  // English/Ukrainian/Turkish
 darkMode: boolean
 pushContent: boolean
 panelMode: 'compact' | 'expanded'
 panelWidthPct: number               // persisted; px derived at runtime from viewport
-historyAutoExpireDays: number       // default 30 (filtered on read in storage.getHistory)
-historyLimit: number                // default 50
 ```
 Defaults in `shared/constants.ts` → `DEFAULT_SETTINGS`. `getSettings()` deep-merges
 stored over defaults (so new fields are safe to add).
@@ -165,7 +175,7 @@ stored over defaults (so new fields are safe to add).
 ## 7. Conventions to keep
 
 - **Storage:** only through `services/storage.ts`. Keys namespaced `grh_*` in
-  `STORAGE_KEYS`. History auto-expires on read; cache has a 7-day TTL.
+  `STORAGE_KEYS`. Cache has a 7-day TTL.
 - **Types/messages:** add new runtime messages to `shared/types.ts` and handle in
   both `service-worker.ts` and `content-main.tsx`.
 - **Data-testids:** every interactive/important element has a kebab-case
@@ -174,7 +184,8 @@ stored over defaults (so new fields are safe to add).
 - **German-only:** `germanDetect.ts` is lenient for ≤3 words (AI double-checks and can
   return `NOT_GERMAN`). Longer text needs stopword/umlaut signal.
 - **Prompts:** `prompts.ts` requests strict JSON (`response_format: json_object`).
-  Chinese = **Traditional (Taiwan)**. Grammar output must stay **< 200 words, bullets**.
+  Dictionary entry + chat answers must stay **in German** (A2–B1). Examples: exactly 3, German only.
+  Sentences/paragraphs get translations only (no grammar) — by user decision.
 - **No secrets in code.** The API key is user-provided and lives only in
   `chrome.storage.local`.
 - Keep components small; avoid adding a backend/DB unless doing the proxy work (§9).
@@ -183,8 +194,8 @@ stored over defaults (so new fields are safe to add).
 
 ## 8. Testing
 
-- **Pure logic:** `test/logic.test.ts` (germanDetect, validateText, prompt contains
-  "Traditional Chinese"). Run:
+- **Pure logic:** `test/logic.test.ts` (germanDetect, validateText, detectLookupMode,
+  lookup/chat prompt contents). Run:
   ```bash
   cd extension
   npx esbuild test/logic.test.ts --bundle --platform=node --format=cjs --outfile=/tmp/t.cjs && node /tmp/t.cjs
@@ -198,7 +209,7 @@ stored over defaults (so new fields are safe to add).
   cd store-assets && python3 capture_live.py   # 1280x800 shots into store-assets/
   ```
 - **Manual smoke test** (the only true end-to-end): load unpacked, set key, select
-  German text on a real site, run both actions, check history + cache + dark mode.
+  German text on a real site, run Translate and Explain on a word and a sentence, ask a follow-up, play 🔊.
 
 ---
 
@@ -246,7 +257,7 @@ with your own billing, add a small proxy and change **one file**:
 | Want to… | Edit |
 |---|---|
 | Change the AI model list / default | `options/OptionsApp.tsx` (MODEL_OPTIONS), `shared/constants.ts` (DEFAULT_MODEL) |
-| Change translation/grammar behavior | `services/prompts.ts` |
+| Change translation/dictionary/chat behavior | `services/prompts.ts` |
 | Add/adjust a target language | `shared/types.ts` (ALL_LANGUAGES, TargetLanguage) + Settings default |
 | Tweak validation (word cap, German rule) | `services/textExtraction.ts`, `services/germanDetect.ts`, `shared/constants.ts` |
 | Change panel look | `content/panel-styles.ts` (+ `Panel.tsx` markup) |

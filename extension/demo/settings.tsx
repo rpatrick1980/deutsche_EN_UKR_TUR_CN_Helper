@@ -8,13 +8,12 @@ const mem: Record<string, any> = {
   grh_settings: {
     apiKey: 'sk-proj-demo-xxxxxxxxxxxxxxxxxxxxxxxx',
     model: 'gpt-4o-mini',
-    enabledLanguages: { English: true, Ukrainian: true, Turkish: true, Chinese: true },
+    ttsModel: 'tts-1',
+    enabledLanguages: { English: true, Ukrainian: true, Turkish: true },
     darkMode: false,
     pushContent: false,
     panelMode: 'expanded',
     panelWidthPct: 26,
-    historyAutoExpireDays: 30,
-    historyLimit: 50,
   },
 }
 ;(globalThis as any).chrome = {

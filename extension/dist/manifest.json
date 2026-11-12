@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "German Reading Helper",
   "version": "1.0.0",
-  "description": "Read German webpages with confidence. Right-click to translate or get compact grammar explanations in a side panel.",
+  "description": "Read German webpages with confidence. Right-click to translate, get dictionary-style word explanations, ask follow-up questions and hear the pronunciation in a side panel.",
   "minimum_chrome_version": "110",
   "icons": {
     "16": "icons/icon-16.png",
@@ -24,7 +24,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/content-main.tsx-loader-D_6JKtQQ.js"
+        "assets/content-main.tsx-loader-CfwgHEGa.js"
       ],
       "matches": [
         "<all_urls>"
@@ -49,8 +49,9 @@
       ],
       "resources": [
         "assets/client-gxHn_UGl.js",
-        "assets/storage-DJq_2oDv.js",
-        "assets/content-main.tsx-BXef8HRr.js"
+        "assets/storage-BDR19HJ2.js",
+        "assets/prompts-DfUxn708.js",
+        "assets/content-main.tsx-dZzRUvhk.js"
       ],
       "use_dynamic_url": false
     }

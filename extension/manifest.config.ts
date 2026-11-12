@@ -5,7 +5,7 @@ export default defineManifest({
   name: 'German Reading Helper',
   version: '1.0.0',
   description:
-    'Read German webpages with confidence. Right-click to translate or get compact grammar explanations in a side panel.',
+    'Read German webpages with confidence. Right-click to translate, get dictionary-style word explanations, ask follow-up questions and hear the pronunciation in a side panel.',
   minimum_chrome_version: '110',
   icons: {
     '16': 'icons/icon-16.png',
